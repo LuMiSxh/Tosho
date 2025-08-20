@@ -1,0 +1,8 @@
+/target
+examples/
+test_downloads
+manga_downloads
+kissmanga_downloads
+
+# Test artifacts
+/tests/downloads/
