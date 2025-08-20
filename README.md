@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Tosho** is a high-performance, async manga aggregation library that provides a unified interface for searching and retrieving manga content from multiple sources. Built with Rust's async/await and designed for speed, reliability, and ease of use.
+**Tosho** is a high-performance, async manga aggregation library that provides a unified interface for searching and downloading manga content from multiple sources. Built with Rust's async/await and designed for speed, reliability, and ease of use.
 
 > **Note**: This project is currently in development and not yet ready for production use.
 
@@ -12,6 +12,7 @@
 - **Async/Await**: Full async support for concurrent operations
 - **Unified API**: Search across multiple manga sources with a single interface
 - **Fluent Builder**: Chain search parameters and execution strategies elegantly
+- **Integrated Downloads**: Direct chapter downloading through source implementations
 - **Rate Limiting**: Per-source rate limiting to respect website policies
 - **Robust Error Handling**: Comprehensive error types with detailed context
 - **Result Processing**: Built-in deduplication, sorting, and filtering capabilities
@@ -29,18 +30,15 @@ tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
 
 ### Basic Usage
 
-## Quick Start
-
 ```rust
 use tosho::prelude::*;
-use tosho::sources::{kissmanga::KissMangaSource, mangadex::MangaDexSource};
+use tosho::sources::mangadex::MangaDexSource;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialize sources
     let mut sources = Sources::new();
-    sources.add(KissMangaSource::new());
-    sources.add(MangaDxSource::new());
+    sources.add(MangaDexSource::new());
 
     // Search across all sources
     let results = sources
@@ -60,30 +58,10 @@ async fn main() -> Result<()> {
         let chapters = source.get_chapters(&manga.id).await?;
 
         if let Some(chapter) = chapters.first() {
-            let pages = source.get_pages(&chapter.id).await?;
-            let download_pages = tosho::download::pages_from_urls(pages);
+            let download_dir = std::path::Path::new("./downloads");
+            let chapter_path = source.download_chapter(&chapter.id, &download_dir).await?;
 
-            let config = DownloadConfigBuilder::default()
-                .concurrency(3usize)
-                .throttle_ms(1000u64)
-                .build()
-                .unwrap();
-
-            let manager = DownloadManager::new(config);
-
-            let stats = manager.download_chapter(
-                &manga.title,
-                Some(chapter.number),
-                &download_pages,
-                |progress| {
-                    tokio::spawn(async move {
-                        let stats = progress.stats().await;
-                        println!("Progress: {:.1}%", stats.percentage());
-                    });
-                }
-            ).await?;
-
-            println!("Downloaded {} pages", stats.completed_pages);
+            println!("Downloaded to: {}", chapter_path.display());
         }
     }
 
@@ -98,7 +76,9 @@ use tosho::prelude::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let sources = Sources::new();
+    let mut sources = Sources::new();
+    sources.add(tosho::sources::mangadex::MangaDexSource::new());
+    sources.add(tosho::sources::kissmanga::KissMangaSource::new());
 
     // Advanced search with filtering and processing
     let results = sources
@@ -146,8 +126,8 @@ let specific = sources.search("naruto").from_source("mangadx").await?;
 let mut sources = Sources::new();
 
 // Add sources
-sources.add(MangaDxSource::new())
-       .add(MadaraSource::new("https://example.com"));
+sources.add(tosho::sources::mangadex::MangaDexSource::new());
+sources.add(tosho::sources::kissmanga::KissMangaSource::new());
 
 // Get source information
 println!("Available sources: {:?}", sources.list_ids());
@@ -174,6 +154,31 @@ let processed = sources
     .sort_by_relevance();     // Sort by relevance score
 ```
 
+### Downloads
+
+Each source provides integrated download functionality:
+
+```rust
+use std::path::Path;
+
+// Get a source
+let source = tosho::sources::mangadex::MangaDexSource::new();
+
+// Search for manga
+let manga_list = source.search("oneshot".into()).await?;
+let manga = &manga_list[0];
+
+// Get chapters
+let chapters = source.get_chapters(&manga.id).await?;
+let chapter = &chapters[0];
+
+// Download chapter - creates a directory with all pages
+let download_dir = Path::new("./downloads");
+let chapter_path = source.download_chapter(&chapter.id, &download_dir).await?;
+
+println!("Downloaded to: {}", chapter_path.display());
+```
+
 ## Architecture
 
 The library is organized into several key modules:
@@ -183,8 +188,8 @@ The library is organized into several key modules:
 - [`types`]: Core data structures for manga, chapters, and search parameters
 - [`net`]: HTTP client, rate limiting, and parsing utilities
 - [`error`]: Comprehensive error handling
-- [`download`]: Download manager with concurrent processing and progress tracking
-- [`sources`]: Built-in source implementations (KissManga, MangaDx)
+- [`download`]: Simple download utilities for individual files
+- [`sources`]: Built-in source implementations (MangaDx, KissManga, Madara)
 
 ### Core Types
 
@@ -210,6 +215,14 @@ pub struct Chapter {
     pub source_id: String,
 }
 ```
+
+## Available Sources
+
+Tosho currently supports the following manga sources:
+
+- **MangaDx**: High-quality manga aggregator
+- **KissManga**: Popular manga reading site
+- **Madara**: Framework for manga sites (configurable base URL)
 
 ## Implementing a Source
 
@@ -244,6 +257,17 @@ impl Source for MyMangaSource {
 
     async fn get_pages(&self, chapter_id: &str) -> Result<Vec<String>> {
         // Implement page URL extraction
+        todo!()
+    }
+
+    // Optional: Override default download behavior
+    async fn download_chapter(
+        &self,
+        chapter_id: &str,
+        output_dir: &std::path::Path,
+    ) -> Result<std::path::PathBuf> {
+        // Custom download implementation
+        // Default implementation downloads all pages to a directory
         todo!()
     }
 }
@@ -306,32 +330,24 @@ match sources.search("query").flatten().await {
 }
 ```
 
-## Examples
+## Download Utilities
 
-Check out the [examples](examples/) directory for more usage examples:
+The library includes simple utilities for file downloads:
 
-- `search_api.rs` - Comprehensive search API showcase
-- More examples coming soon!
+```rust
+use tosho::download::{download_file, sanitize_filename, extract_extension};
+use std::path::Path;
 
-## Documentation
+// Download a single file
+let bytes = download_file("https://example.com/image.jpg", Path::new("./image.jpg")).await?;
 
-- Full API documentation (run `cargo doc --open`)
-- [Examples](examples/) - Usage examples and tutorials
+// Sanitize filenames for safe filesystem use
+let safe_name = sanitize_filename("Chapter: 1 - The Beginning!");
 
-## Status
-
-✅ **Complete Implementation**
-
-- KissManga and MangaDx source providers
-- Unified search API with filtering and sorting
-- Integrated download manager with progress tracking
-- Comprehensive error handling and rate limiting
-- Full async/await support with tokio
+// Extract file extension from URL
+let ext = extract_extension("https://example.com/image.jpg?v=123"); // Some("jpg")
+```
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Disclaimer
-
-This library is for educational purposes. Please respect the terms of service of the manga websites you interact with and consider supporting official sources.
