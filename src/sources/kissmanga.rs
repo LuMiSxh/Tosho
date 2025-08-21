@@ -8,6 +8,51 @@ use std::collections::HashMap;
 
 use super::madara_configurable::{ConfigurableMadaraSource, MadaraConfig, MadaraSelectors};
 
+/// KissManga source implementation for accessing manga from KissManga.in.
+///
+/// This source provides access to KissManga, a popular manga reading website
+/// that uses the Madara WordPress theme. It leverages the configurable Madara
+/// base implementation with KissManga-specific settings and selectors.
+///
+/// # Features
+///
+/// - Manga search with query support
+/// - Chapter listing and metadata retrieval
+/// - Image downloads from KissManga's hosting
+/// - Built-in rate limiting and retry logic
+/// - Custom headers for improved compatibility
+///
+/// # Implementation Details
+///
+/// This source is built on top of the [`ConfigurableMadaraSource`] which handles
+/// the common Madara theme patterns. KissManga-specific configuration includes:
+/// - Custom User-Agent and headers for better site compatibility
+/// - Optimized CSS selectors for KissManga's layout
+/// - Proper referrer handling
+///
+/// # Examples
+///
+/// ```rust
+/// use tosho::sources::KissMangaSource;
+/// use tosho::prelude::*;
+///
+/// # async fn example() -> tosho::Result<()> {
+/// let source = KissMangaSource::new();
+///
+/// // Search for manga
+/// let results = source.search(SearchParams {
+///     query: "naruto".to_string(),
+///     limit: Some(5),
+///     ..Default::default()
+/// }).await?;
+///
+/// // Get chapters for a manga
+/// if let Some(manga) = results.first() {
+///     let chapters = source.get_chapters(&manga.id).await?;
+/// }
+/// # Ok(())
+/// # }
+/// ```
 pub struct KissMangaSource {
     inner: ConfigurableMadaraSource,
 }

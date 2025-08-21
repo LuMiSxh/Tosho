@@ -119,6 +119,10 @@ impl Source for ConfigurableMadaraSource {
                     description: None,
                     tags: vec![],
                     source_id: self.id().to_string(),
+                    #[cfg(feature = "chrono")]
+                    created_at: None,
+                    #[cfg(feature = "chrono")]
+                    updated_at: None,
                 })
             })
             .collect::<Vec<_>>();
@@ -176,6 +180,8 @@ impl Source for ConfigurableMadaraSource {
                     pages: vec![],
                     manga_id: manga_id.to_string(),
                     source_id: self.id().to_string(),
+                    #[cfg(feature = "chrono")]
+                    created_at: None,
                 })
             })
             .collect();
@@ -218,7 +224,9 @@ impl Source for ConfigurableMadaraSource {
             .collect();
 
         if pages.is_empty() {
-            return Err(crate::Error::not_found("No valid pages found after filtering"));
+            return Err(crate::Error::not_found(
+                "No valid pages found after filtering",
+            ));
         }
 
         Ok(pages)

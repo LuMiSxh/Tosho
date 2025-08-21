@@ -6,9 +6,9 @@ use tokio::time::timeout;
 use tosho::prelude::*;
 use tosho::sources::{KissMangaSource, MangaDexSource};
 
-// Import test utilities from mod
+// Import test utilities
 mod common;
-use common::{setup_test_dir, TEST_TIMEOUT, DOWNLOAD_TIMEOUT};
+use common::{DOWNLOAD_TIMEOUT, TEST_TIMEOUT, setup_test_dir};
 
 #[cfg(test)]
 mod source_tests {
@@ -125,7 +125,10 @@ mod source_tests {
                         let download_future = source.download_chapter(&chapter.id, &test_dir);
                         match timeout(DOWNLOAD_TIMEOUT, download_future).await {
                             Ok(Ok(chapter_path)) => {
-                                println!("MangaDx chapter downloaded to: {}", chapter_path.display());
+                                println!(
+                                    "MangaDx chapter downloaded to: {}",
+                                    chapter_path.display()
+                                );
                                 assert!(chapter_path.exists());
 
                                 // Check that files were actually downloaded
@@ -191,7 +194,10 @@ mod source_tests {
                         let download_future = source.download_chapter(&chapter.id, &test_dir);
                         match timeout(DOWNLOAD_TIMEOUT, download_future).await {
                             Ok(Ok(chapter_path)) => {
-                                println!("KissManga chapter downloaded to: {}", chapter_path.display());
+                                println!(
+                                    "KissManga chapter downloaded to: {}",
+                                    chapter_path.display()
+                                );
                                 assert!(chapter_path.exists());
 
                                 // Check that files were actually downloaded

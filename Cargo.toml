@@ -8,6 +8,18 @@ repository = "https://github.com/lumisxh/tosho"
 keywords = ["manga", "scraping", "async", "library"]
 categories = ["web-programming", "api-bindings"]
 
+[features]
+default = ["all-sources"]
+
+# Database compatibility
+sqlx = ["dep:sqlx", "chrono"]
+chrono = ["dep:chrono"]
+
+# Source management
+source-mangadex = []
+source-kissmanga = []
+all-sources = ["source-mangadex", "source-kissmanga"]
+
 [lib]
 name = "tosho"
 crate-type = ["lib"]
@@ -41,12 +53,16 @@ scraper = "0.24"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# Error handling (using thiserror for structured errors)
+# Error handling
 thiserror = "2.0"
 
 # Concurrency and utilities
-once_cell = "1.21"    # Lazy static initialization
-parking_lot = "0.12"  # High-performance mutex for rate limiting
-urlencoding = "2.1.3" # URL encoding for search queries
-regex = "1.10"        # Regular expressions for chapter number extraction
-url = "2.4"           # URL parsing and manipulation
+once_cell = "1.21"
+parking_lot = "0.12"
+urlencoding = "2.1.3"
+regex = "1.10"
+url = "2.4"
+
+# Optional dependencies for features
+sqlx = { version = "0.7", features = ["chrono"], optional = true }
+chrono = { version = "0.4", features = ["serde"], optional = true }

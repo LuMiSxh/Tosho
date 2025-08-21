@@ -8,7 +8,7 @@ use tosho::prelude::*;
 
 // Import test utilities from mod
 mod common;
-use common::{setup_test_dir, TEST_TIMEOUT};
+use common::{TEST_TIMEOUT, setup_test_dir};
 
 #[cfg(test)]
 mod download_tests {
@@ -91,7 +91,10 @@ mod download_tests {
 
         match timeout(TEST_TIMEOUT, download_future).await {
             Ok(Ok(bytes_downloaded)) => {
-                println!("Downloaded {} bytes to {:?}", bytes_downloaded, test_file_path);
+                println!(
+                    "Downloaded {} bytes to {:?}",
+                    bytes_downloaded, test_file_path
+                );
                 assert!(test_file_path.exists());
                 assert!(bytes_downloaded > 0);
 
@@ -177,14 +180,19 @@ mod download_tests {
         let expected_chapter_dir = expected_manga_dir.join(&sanitized_chapter);
 
         // Create the directory structure
-        tokio::fs::create_dir_all(&expected_chapter_dir).await.unwrap();
+        tokio::fs::create_dir_all(&expected_chapter_dir)
+            .await
+            .unwrap();
 
         // Verify the structure
         assert!(expected_manga_dir.exists());
         assert!(expected_chapter_dir.exists());
 
         println!("Created manga directory: {}", expected_manga_dir.display());
-        println!("Created chapter directory: {}", expected_chapter_dir.display());
+        println!(
+            "Created chapter directory: {}",
+            expected_chapter_dir.display()
+        );
 
         // Test that paths don't contain dangerous characters
         let manga_path_str = expected_manga_dir.to_string_lossy();
@@ -205,9 +213,18 @@ mod download_tests {
 
         // Test downloading multiple small files concurrently
         let download_tasks = vec![
-            ("https://httpbin.org/bytes/256".to_string(), test_dir.join("concurrent_file_0.bin")),
-            ("https://httpbin.org/bytes/512".to_string(), test_dir.join("concurrent_file_1.bin")),
-            ("https://httpbin.org/bytes/128".to_string(), test_dir.join("concurrent_file_2.bin")),
+            (
+                "https://httpbin.org/bytes/256".to_string(),
+                test_dir.join("concurrent_file_0.bin"),
+            ),
+            (
+                "https://httpbin.org/bytes/512".to_string(),
+                test_dir.join("concurrent_file_1.bin"),
+            ),
+            (
+                "https://httpbin.org/bytes/128".to_string(),
+                test_dir.join("concurrent_file_2.bin"),
+            ),
         ];
 
         let mut handles = Vec::new();
@@ -238,7 +255,10 @@ mod download_tests {
                 }
 
                 if success_count > 0 {
-                    println!("Concurrent downloads completed: {}/{} successful", success_count, 3);
+                    println!(
+                        "Concurrent downloads completed: {}/{} successful",
+                        success_count, 3
+                    );
                 } else {
                     println!("All concurrent downloads failed (likely network issues)");
                 }

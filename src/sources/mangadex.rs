@@ -133,7 +133,50 @@ struct MangaDexChapterPages {
     data_saver: Vec<String>,
 }
 
-/// MangaDex source implementation
+/// MangaDex source implementation for accessing manga from MangaDex.org.
+///
+/// This source provides access to the MangaDex API, supporting search functionality,
+/// chapter retrieval, and image downloads. MangaDx is one of the largest open-source
+/// manga platforms with extensive multilingual support.
+///
+/// # Features
+///
+/// - Full-text manga search with filtering support
+/// - Multi-language title support (prioritizes English, then Japanese)
+/// - Chapter listing and metadata retrieval
+/// - High-quality image downloads with fallback support
+/// - Built-in rate limiting (1 request per second)
+/// - Automatic retry on failed requests
+///
+/// # Rate Limiting
+///
+/// This implementation respects MangaDex's API rate limits by enforcing
+/// a 1-second delay between requests. The API allows up to 5 requests
+/// per second, but we use a conservative limit to avoid issues.
+///
+/// # Examples
+///
+/// ```rust
+/// use tosho::sources::MangaDexSource;
+/// use tosho::prelude::*;
+///
+/// # async fn example() -> tosho::Result<()> {
+/// let source = MangaDexSource::new();
+///
+/// // Search for manga
+/// let results = source.search(SearchParams {
+///     query: "one piece".to_string(),
+///     limit: Some(10),
+///     ..Default::default()
+/// }).await?;
+///
+/// // Get chapters for a manga
+/// if let Some(manga) = results.first() {
+///     let chapters = source.get_chapters(&manga.id).await?;
+/// }
+/// # Ok(())
+/// # }
+/// ```
 pub struct MangaDexSource {
     client: HttpClient,
     api_base: String,
@@ -292,6 +335,8 @@ impl MangaDexSource {
             pages: vec![], // Pages are fetched separately
             manga_id: manga_id.to_string(),
             source_id: self.id().to_string(),
+            #[cfg(feature = "chrono")]
+            created_at: None,
         })
     }
 
@@ -345,6 +390,10 @@ impl MangaDexSource {
             },
             tags,
             source_id: self.id().to_string(),
+            #[cfg(feature = "chrono")]
+            created_at: None,
+            #[cfg(feature = "chrono")]
+            updated_at: None,
         }
     }
 }

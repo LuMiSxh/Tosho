@@ -23,11 +23,13 @@
 //! ```rust
 //! use tosho::prelude::*;
 //! use tosho::error::Result;
+//! #[cfg(feature = "source-mangadex")]
 //! use tosho::sources::MangaDexSource;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
 //!     let mut sources = Sources::new();
+//!     #[cfg(feature = "source-mangadex")]
 //!     sources.add(MangaDexSource::new());
 //!
 //!     // Simple search with flattened results
@@ -48,11 +50,13 @@
 //! ```rust,no_run
 //! use tosho::prelude::*;
 //! use tosho::error::Result;
+//! #[cfg(feature = "source-mangadex")]
 //! use tosho::sources::MangaDexSource;
 //! use std::path::PathBuf;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
+//!     #[cfg(feature = "source-mangadex")]
 //!     let source = MangaDexSource::new();
 //!
 //!     // Search for manga

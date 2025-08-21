@@ -24,15 +24,41 @@ Add Tosho to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tosho = { path = "../tosho" }  # or git = "https://github.com/lumisxh/tosho"
+tosho = "0.1"  # All sources included by default
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
 ```
+
+### Feature Flags
+
+Tosho supports several feature flags to customize your build:
+
+```toml
+[dependencies]
+# Default: includes all sources
+tosho = "0.1"
+
+# With SQLx compatibility for database storage
+tosho = { version = "0.1", features = ["sqlx"] }
+
+# Minimal build with only MangaDex
+tosho = { version = "0.1", default-features = false, features = ["source-mangadex"] }
+
+# Custom feature combinations
+tosho = { version = "0.1", features = ["sqlx", "source-mangadex", "source-kissmanga"] }
+```
+
+**Available Features:**
+
+- `sqlx` - Adds SQLx derive traits to `Manga` and `Chapter` for database compatibility
+- `source-mangadex` - MangaDex source support
+- `source-kissmanga` - KissManga source support
+- `all-sources` - All available sources (default)
 
 ### Basic Usage
 
 ```rust
 use tosho::prelude::*;
-use tosho::sources::mangadex::MangaDexSource;
+use tosho::sources::MangaDexSource;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -77,8 +103,8 @@ use tosho::prelude::*;
 #[tokio::main]
 async fn main() -> Result<()> {
     let mut sources = Sources::new();
-    sources.add(tosho::sources::mangadex::MangaDexSource::new());
-    sources.add(tosho::sources::kissmanga::KissMangaSource::new());
+    sources.add(tosho::sources::MangaDexSource::new());
+    sources.add(tosho::sources::KissMangaSource::new());
 
     // Advanced search with filtering and processing
     let results = sources
@@ -126,8 +152,8 @@ let specific = sources.search("naruto").from_source("mangadex").await?;
 let mut sources = Sources::new();
 
 // Add sources
-sources.add(tosho::sources::mangadex::MangaDexSource::new());
-sources.add(tosho::sources::kissmanga::KissMangaSource::new());
+sources.add(tosho::sources::MangaDexSource::new());
+sources.add(tosho::sources::KissMangaSource::new());
 
 // Get source information
 println!("Available sources: {:?}", sources.list_ids());
@@ -203,6 +229,12 @@ pub struct Manga {
     pub description: Option<String>,
     pub tags: Vec<String>,
     pub source_id: String,
+
+    // Available with "sqlx" feature
+    #[cfg(feature = "chrono")]
+    pub created_at: Option<DateTime<Utc>>,
+    #[cfg(feature = "chrono")]
+    pub updated_at: Option<DateTime<Utc>>,
 }
 
 // Chapter information
@@ -213,6 +245,10 @@ pub struct Chapter {
     pub pages: Vec<String>,
     pub manga_id: String,
     pub source_id: String,
+
+    // Available with "sqlx" feature
+    #[cfg(feature = "chrono")]
+    pub created_at: Option<DateTime<Utc>>,
 }
 ```
 
@@ -220,8 +256,10 @@ pub struct Chapter {
 
 Tosho currently supports the following manga sources:
 
-- **MangaDex**
-- **KissManga**
+- **MangaDex** - Available with `source-mangadex`
+- **KissManga** - Available with `source-kissmanga`
+
+All sources are included by default. Use feature flags to create minimal builds with only the sources you need.
 
 ## Implementing a Source
 
@@ -346,6 +384,41 @@ let safe_name = sanitize_filename("Chapter: 1 - The Beginning!");
 // Extract file extension from URL
 let ext = extract_extension("https://example.com/image.jpg?v=123"); // Some("jpg")
 ```
+
+## Database Integration (SQLx Feature)
+
+When the `sqlx` feature is enabled, `Manga` and `Chapter` structs derive `FromRow` for easy database integration:
+
+```toml
+[dependencies]
+tosho = { version = "0.1", features = ["sqlx"] }
+sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio-rustls"] }
+```
+
+```rust
+use tosho::prelude::*;
+use sqlx::SqlitePool;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let pool = SqlitePool::connect("sqlite:manga.db").await?;
+
+    // Search for manga
+    let manga = source.search("one piece").await?[0].clone();
+
+    // Save to database (user's code, not part of Tosho)
+    sqlx::query!(
+        "INSERT INTO manga (id, title, source_id, created_at) VALUES (?, ?, ?, ?)",
+        manga.id, manga.title, manga.source_id, chrono::Utc::now()
+    )
+    .execute(&pool)
+    .await?;
+
+    Ok(())
+}
+```
+
+**Note**: Tosho only provides SQLx-compatible structs. Database schema design, migrations, and query logic are left to the user for maximum flexibility.
 
 ## License
 

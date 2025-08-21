@@ -9,7 +9,7 @@ use tosho::sources::{KissMangaSource, MangaDexSource};
 
 // Import test utilities from mod
 mod common;
-use common::{setup_test_dir, TEST_TIMEOUT, TEST_MANGA_TITLE};
+use common::{TEST_MANGA_TITLE, TEST_TIMEOUT, setup_test_dir};
 
 #[cfg(test)]
 mod integration_tests {
@@ -51,7 +51,10 @@ mod integration_tests {
 
                 // Test deduplication - clone to avoid move
                 let dedupe_results = manga_list.clone().dedupe_by_title();
-                println!("After deduplication: {} unique titles", dedupe_results.len());
+                println!(
+                    "After deduplication: {} unique titles",
+                    dedupe_results.len()
+                );
 
                 // Test relevance sorting
                 let sorted_results = manga_list.clone().sort_by_relevance();
@@ -68,7 +71,10 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_full_workflow() {
-        let test_dir = setup_test_dir().await.join("integration").join("full_workflow");
+        let test_dir = setup_test_dir()
+            .await
+            .join("integration")
+            .join("full_workflow");
         let mut sources = Sources::new();
         sources.add(MangaDexSource::new());
 
@@ -95,8 +101,9 @@ mod integration_tests {
                         // Step 3: Download chapter
                         let download_result = timeout(
                             Duration::from_secs(60),
-                            source.download_chapter(&chapter.id, &test_dir)
-                        ).await;
+                            source.download_chapter(&chapter.id, &test_dir),
+                        )
+                        .await;
 
                         match download_result {
                             Ok(Ok(chapter_path)) => {
@@ -120,7 +127,10 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_multi_source_search() {
-        let _test_dir = setup_test_dir().await.join("integration").join("multi_source");
+        let _test_dir = setup_test_dir()
+            .await
+            .join("integration")
+            .join("multi_source");
         let mut sources = Sources::new();
         sources.add(MangaDexSource::new());
         sources.add(KissMangaSource::new());
@@ -141,12 +151,18 @@ mod integration_tests {
                 let mgd_results = results.iter().filter(|m| m.source_id == "mgd").count();
                 let kmg_results = results.iter().filter(|m| m.source_id == "kmg").count();
 
-                println!("MangaDx results: {}, KissManga results: {}", mgd_results, kmg_results);
+                println!(
+                    "MangaDx results: {}, KissManga results: {}",
+                    mgd_results, kmg_results
+                );
 
                 // Test deduplication across sources - clone to avoid move
                 let original_len = results.len();
                 let dedupe_results = results.dedupe_by_title();
-                println!("After cross-source deduplication: {} unique titles", dedupe_results.len());
+                println!(
+                    "After cross-source deduplication: {} unique titles",
+                    dedupe_results.len()
+                );
                 assert!(dedupe_results.len() <= original_len);
             }
             Ok(Err(e)) => println!("Multi-source search failed: {}", e),

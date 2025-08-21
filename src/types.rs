@@ -26,6 +26,11 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "chrono")]
+use chrono::{DateTime, Utc};
+#[cfg(feature = "sqlx")]
+use sqlx::FromRow;
+
 /// Represents a manga/comic series with all its metadata.
 ///
 /// This is the core data structure for manga information across all sources.
@@ -58,6 +63,7 @@ use serde::{Deserialize, Serialize};
 /// };
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "sqlx", derive(FromRow))]
 pub struct Manga {
     /// Unique identifier within the source
     pub id: String,
@@ -69,6 +75,7 @@ pub struct Manga {
     pub cover_url: Option<String>,
 
     /// List of authors
+    #[cfg_attr(feature = "sqlx", sqlx(skip))]
     #[serde(default)]
     pub authors: Vec<String>,
 
@@ -76,11 +83,22 @@ pub struct Manga {
     pub description: Option<String>,
 
     /// Tags/genres
+    #[cfg_attr(feature = "sqlx", sqlx(skip))]
     #[serde(default)]
     pub tags: Vec<String>,
 
     /// Source identifier this manga came from
     pub source_id: String,
+
+    /// Creation timestamp (for database users)
+    #[cfg(feature = "chrono")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<DateTime<Utc>>,
+
+    /// Last update timestamp (for database users)
+    #[cfg(feature = "chrono")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub updated_at: Option<DateTime<Utc>>,
 }
 
 /// Represents a single chapter of a manga.
@@ -115,6 +133,7 @@ pub struct Manga {
 /// };
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "sqlx", derive(FromRow))]
 pub struct Chapter {
     /// Unique identifier within the source
     pub id: String,
@@ -126,6 +145,7 @@ pub struct Chapter {
     pub title: String,
 
     /// Page URLs for this chapter
+    #[cfg_attr(feature = "sqlx", sqlx(skip))]
     #[serde(default)]
     pub pages: Vec<String>,
 
@@ -134,6 +154,11 @@ pub struct Chapter {
 
     /// Source identifier
     pub source_id: String,
+
+    /// Creation timestamp (for database users)
+    #[cfg(feature = "chrono")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<DateTime<Utc>>,
 }
 
 /// Search parameters for querying manga across sources.

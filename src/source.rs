@@ -133,7 +133,7 @@ pub trait Source: Send + Sync {
     /// # struct MySource;
     /// # #[async_trait::async_trait]
     /// # impl Source for MySource {
-    /// #   fn id(&self) -> &'static str { "mangadx" }
+    /// #   fn id(&self) -> &'static str { "mgd" }
     /// fn name(&self) -> &'static str {
     ///     "MangaDex"  // or "MangaPlus", "Viz Media", etc.
     /// }
@@ -157,10 +157,10 @@ pub trait Source: Send + Sync {
     /// # struct MySource;
     /// # #[async_trait::async_trait]
     /// # impl Source for MySource {
-    /// #   fn id(&self) -> &'static str { "mangadx" }
+    /// #   fn id(&self) -> &'static str { "mgd" }
     /// #   fn name(&self) -> &'static str { "MangaDex" }
     /// fn base_url(&self) -> &str {
-    ///     "https://mangadx.org"  // No trailing slash
+    ///     "https://mangadex.org"  // No trailing slash
     /// }
     /// #   async fn search(&self, params: tosho::SearchParams) -> tosho::Result<Vec<tosho::Manga>> { Ok(vec![]) }
     /// #   async fn get_chapters(&self, manga_id: &str) -> tosho::Result<Vec<tosho::Chapter>> { Ok(vec![]) }
@@ -369,7 +369,7 @@ pub trait Source: Send + Sync {
 /// let results = sources.search("one piece").limit(10).flatten().await?;
 ///
 /// // Search specific source
-/// let mangadx_results = sources.search("naruto").from_source("mangadx").await?;
+/// let mangadx_results = sources.search("naruto").from_source("mgd").await?;
 ///
 /// // Get source information
 /// println!("Available sources: {:?}", sources.list_ids());
@@ -485,7 +485,7 @@ impl Sources {
     /// # async fn example() -> Result<()> {
     /// let sources = Sources::new();
     ///
-    /// if let Some(source) = sources.get("mangadx") {
+    /// if let Some(source) = sources.get("mgd") {
     ///     println!("Found source: {}", source.name());
     ///     let chapters = source.get_chapters("manga_id").await?;
     /// } else {
