@@ -1,10 +1,14 @@
-use std::path::PathBuf;
+//! Unit tests for core Tosho functionality
+//!
+//! Tests individual components in isolation without network calls.
+
 use tosho::prelude::*;
 use tosho::types::SearchParamsBuilder;
 
 #[cfg(test)]
-mod tests {
+mod unit_tests {
     use super::*;
+    use tosho::Error;
 
     #[test]
     fn test_search_params_builder() {
@@ -68,34 +72,6 @@ mod tests {
     }
 
     #[test]
-    fn test_page_strings() {
-        let pages = vec![
-            "https://example.com/page1.jpg".to_string(),
-            "https://example.com/page2.png".to_string(),
-        ];
-
-        assert_eq!(pages.len(), 2);
-        assert!(!pages[0].is_empty());
-        assert!(!pages[1].is_empty());
-        assert!(pages[0].contains("page1"));
-        assert!(pages[1].contains("page2"));
-    }
-
-    #[test]
-    fn test_sort_order_enum() {
-        let orders = vec![
-            SortOrder::Relevance,
-            SortOrder::UpdatedAt,
-            SortOrder::CreatedAt,
-            SortOrder::Title,
-        ];
-
-        assert_eq!(orders.len(), 4);
-        assert!(matches!(orders[0], SortOrder::Relevance));
-        assert!(matches!(orders[1], SortOrder::UpdatedAt));
-    }
-
-    #[test]
     fn test_filename_sanitization() {
         let dirty_filename = "Test/Manga\\Chapter:1*?\"<>|";
         let clean_filename = sanitize_filename(dirty_filename);
@@ -149,7 +125,7 @@ mod tests {
         assert!(sources.is_empty());
 
         // Add a source
-        sources.add(tosho::sources::mangadex::MangaDexSource::new());
+        sources.add(tosho::sources::MangaDexSource::new());
         assert_eq!(sources.len(), 1);
         assert!(!sources.is_empty());
 
@@ -209,16 +185,6 @@ mod tests {
         let error = Error::not_found("Test not found error");
         let error_string = format!("{}", error);
         assert!(error_string.contains("Test not found error"));
-    }
-
-    #[test]
-    fn test_pathbuf_operations() {
-        let base_path = PathBuf::from("tests/downloads");
-        let manga_path = base_path.join("test-manga");
-        let chapter_path = manga_path.join("chapter-1");
-
-        assert!(manga_path.to_string_lossy().contains("test-manga"));
-        assert!(chapter_path.to_string_lossy().contains("chapter-1"));
     }
 
     #[test]

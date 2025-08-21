@@ -8,6 +8,7 @@
 //!
 //! ```rust
 //! use tosho::prelude::*;
+//! use tosho::error::Result;
 //!
 //! # async fn example() -> Result<()> {
 //! let mut sources = Sources::new();
@@ -62,6 +63,7 @@ use crate::{
 ///
 /// ```rust
 /// use tosho::prelude::*;
+/// use tosho::error::Result;
 /// use async_trait::async_trait;
 ///
 /// struct MyMangaSource {
@@ -356,6 +358,7 @@ pub trait Source: Send + Sync {
 ///
 /// ```rust
 /// use tosho::prelude::*;
+/// use tosho::error::Result;
 ///
 /// # async fn example() -> Result<()> {
 /// let mut sources = Sources::new();
@@ -411,6 +414,7 @@ impl Sources {
     ///
     /// ```rust
     /// use tosho::prelude::*;
+    /// use tosho::error::Result;
     ///
     /// # async fn example() -> Result<()> {
     /// let sources = Sources::new();
@@ -476,6 +480,7 @@ impl Sources {
     ///
     /// ```rust
     /// use tosho::prelude::*;
+    /// use tosho::error::Result;
     ///
     /// # async fn example() -> Result<()> {
     /// let sources = Sources::new();
@@ -538,6 +543,7 @@ impl Sources {
     ///
     /// ```rust
     /// use tosho::prelude::*;
+    /// use tosho::error::Result;
     ///
     /// # async fn example() -> Result<()> {
     /// let sources = Sources::new();
@@ -598,6 +604,7 @@ impl Sources {
     ///
     /// ```rust
     /// use tosho::prelude::*;
+    /// use tosho::error::Result;
     ///
     /// # async fn example() -> Result<()> {
     /// let sources = Sources::new();

@@ -10,6 +10,7 @@ use std::collections::HashMap;
 
 /// MangaDex API search response
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct MangaDexSearchResponse {
     data: Vec<MangaDexMangaData>,
     total: u32,
@@ -19,12 +20,14 @@ struct MangaDexSearchResponse {
 
 /// MangaDex API manga response
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct MangaDexMangaResponse {
     data: MangaDexMangaData,
 }
 
 /// MangaDex manga data structure
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct MangaDexMangaData {
     id: String,
     #[serde(rename = "type")]
@@ -35,6 +38,7 @@ struct MangaDexMangaData {
 
 /// MangaDex manga attributes
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct MangaDexMangaAttributes {
     title: HashMap<String, String>,
     #[serde(rename = "altTitles")]
@@ -75,6 +79,7 @@ struct MangaDexRelationshipAttributes {
 
 /// MangaDex chapter list response
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct MangaDexChapterListResponse {
     data: Vec<MangaDexChapterData>,
     total: u32,
@@ -84,12 +89,14 @@ struct MangaDexChapterListResponse {
 
 /// MangaDex single chapter response
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct MangaDexChapterResponse {
     data: MangaDexChapterData,
 }
 
 /// MangaDex chapter data structure
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct MangaDexChapterData {
     id: String,
     attributes: MangaDexChapterAttributes,
@@ -98,6 +105,7 @@ struct MangaDexChapterData {
 
 /// MangaDex chapter attributes
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct MangaDexChapterAttributes {
     title: Option<String>,
     chapter: Option<String>,

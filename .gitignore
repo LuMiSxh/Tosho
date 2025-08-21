@@ -1,8 +1,6 @@
 /target
 examples/
-test_downloads
-manga_downloads
-kissmanga_downloads
+.idea
 
 # Test artifacts
 /tests/downloads/

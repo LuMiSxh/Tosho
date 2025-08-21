@@ -117,7 +117,7 @@ for (source_id, result) in grouped {
 }
 
 // Search specific source only
-let specific = sources.search("naruto").from_source("mangadx").await?;
+let specific = sources.search("naruto").from_source("mangadex").await?;
 ```
 
 ### Source Management
@@ -134,7 +134,7 @@ println!("Available sources: {:?}", sources.list_ids());
 println!("Total sources: {}", sources.len());
 
 // Access specific source
-if let Some(source) = sources.get("mangadx") {
+if let Some(source) = sources.get("mangadex") {
     let chapters = source.get_chapters("manga_id").await?;
 }
 ```
@@ -189,7 +189,7 @@ The library is organized into several key modules:
 - [`net`]: HTTP client, rate limiting, and parsing utilities
 - [`error`]: Comprehensive error handling
 - [`download`]: Simple download utilities for individual files
-- [`sources`]: Built-in source implementations (MangaDx, KissManga, Madara)
+- [`sources`]: Built-in source implementations (MangaDex, KissManga, Madara)
 
 ### Core Types
 
@@ -220,9 +220,8 @@ pub struct Chapter {
 
 Tosho currently supports the following manga sources:
 
-- **MangaDx**: High-quality manga aggregator
-- **KissManga**: Popular manga reading site
-- **Madara**: Framework for manga sites (configurable base URL)
+- **MangaDex**
+- **KissManga**
 
 ## Implementing a Source
 

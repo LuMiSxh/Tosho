@@ -7,8 +7,10 @@
 //!
 //! ```rust
 //! use tosho::prelude::*;
+//! # use tosho::error::Result;
 //!
 //! # async fn example() -> Result<()> {
+//!
 //! let sources = Sources::new();
 //!
 //! // Simple search with result processing
@@ -54,6 +56,7 @@ use crate::{
 ///
 /// ```rust
 /// use tosho::prelude::*;
+/// use tosho::error::Result;
 ///
 /// # async fn example() -> Result<()> {
 /// let sources = Sources::new();
@@ -103,11 +106,13 @@ impl<'a> SearchBuilder<'a> {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// let results = sources
     ///     .search("popular manga")
-    ///     .limit(10)  // Only return first 10 results
+    ///     .limit(10)  // Only return the first 10 results
     ///     .flatten()
     ///     .await?;
     /// # Ok(())
@@ -126,8 +131,10 @@ impl<'a> SearchBuilder<'a> {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// // Get the second page of results (items 10-19)
     /// let page_2 = sources
     ///     .search("manga")
@@ -149,8 +156,10 @@ impl<'a> SearchBuilder<'a> {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// let action_manga = sources
     ///     .search("manga")
     ///     .include_tags(vec!["Action".to_string(), "Adventure".to_string()])
@@ -170,8 +179,10 @@ impl<'a> SearchBuilder<'a> {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// let sfw_manga = sources
     ///     .search("manga")
     ///     .exclude_tags(vec!["Ecchi".to_string(), "Harem".to_string()])
@@ -191,8 +202,10 @@ impl<'a> SearchBuilder<'a> {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// let recent_manga = sources
     ///     .search("manga")
     ///     .sort_by(SortOrder::UpdatedAt)
@@ -225,8 +238,10 @@ impl<'a> SearchBuilder<'a> {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// let all_results = sources
     ///     .search("one piece")
     ///     .limit(20)
@@ -255,8 +270,10 @@ impl<'a> SearchBuilder<'a> {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// let grouped = sources
     ///     .search("naruto")
     ///     .limit(10)
@@ -298,8 +315,10 @@ impl<'a> SearchBuilder<'a> {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// let mangadex_results = sources
     ///     .search("dragon ball")
     ///     .from_source("mangadex")
@@ -332,8 +351,10 @@ impl<'a> SearchBuilder<'a> {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// let search_params = sources
     ///     .search("manga")
     ///     .limit(20)
@@ -359,6 +380,7 @@ impl<'a> SearchBuilder<'a> {
 ///
 /// ```rust
 /// use tosho::prelude::*;
+/// use tosho::error::Result;
 ///
 /// # async fn example() -> Result<()> {
 /// # let sources = Sources::new();
@@ -394,8 +416,10 @@ pub trait SearchResultExt {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// // Filter for well-documented manga (score >= 4)
     /// let quality_results = sources
     ///     .search("manga")
@@ -417,8 +441,10 @@ pub trait SearchResultExt {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// let unique_results = sources
     ///     .search("one piece")
     ///     .flatten()
@@ -442,8 +468,10 @@ pub trait SearchResultExt {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// let sorted_results = sources
     ///     .search("naruto")
     ///     .flatten()
@@ -468,8 +496,10 @@ pub trait SearchResultExt {
     ///
     /// ```rust
     /// # use tosho::prelude::*;
+    /// # use tosho::error::Result;
     /// # async fn example() -> Result<()> {
     /// # let sources = Sources::new();
+    ///
     /// let query = "one piece";
     /// let sorted_results = sources
     ///     .search(query)

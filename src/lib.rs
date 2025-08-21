@@ -22,7 +22,8 @@
 //!
 //! ```rust
 //! use tosho::prelude::*;
-//! use tosho::sources::mangadex::MangaDexSource;
+//! use tosho::error::Result;
+//! use tosho::sources::MangaDexSource;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
@@ -46,7 +47,8 @@
 //!
 //! ```rust,no_run
 //! use tosho::prelude::*;
-//! use tosho::sources::mangadex::MangaDexSource;
+//! use tosho::error::Result;
+//! use tosho::sources::MangaDexSource;
 //! use std::path::PathBuf;
 //!
 //! #[tokio::main]
@@ -86,6 +88,8 @@
 //!
 //! ```rust
 //! # use tosho::prelude::*;
+//! # use tosho::error::Result;
+//!
 //! # async fn example() -> Result<()> {
 //! # let sources = Sources::new();
 //! // Flatten results from all sources
@@ -106,6 +110,8 @@
 //!
 //! ```rust
 //! # use tosho::prelude::*;
+//! # use tosho::error::Result;
+//!
 //! # async fn example() -> Result<()> {
 //! # let sources = Sources::new();
 //! let processed = sources
@@ -141,13 +147,11 @@ pub mod types;
 /// // - Sources, Source trait
 /// // - SearchBuilder, SearchResultExt
 /// // - Manga, Chapter, SearchParams, SortOrder
-/// // - Error, Result types
 /// // - Download utilities
 /// ```
 pub mod prelude {
     pub use crate::{
         download::{download_file, extract_extension, sanitize_filename},
-        error::{Error, Result},
         search::{SearchBuilder, SearchResultExt},
         source::{Source, Sources},
         types::{Chapter, Manga, SearchParams, SortOrder},

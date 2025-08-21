@@ -1,25 +1,18 @@
+//! Download functionality tests
+//!
+//! Tests file downloading, path handling, and download utilities.
+
 use std::path::PathBuf;
-use std::time::Duration;
 use tokio::time::timeout;
 use tosho::prelude::*;
-use tosho::sources::{kissmanga::KissMangaSource, mangadex::MangaDexSource};
 
-const TEST_DOWNLOADS_DIR: &str = "tests/downloads";
-const TEST_TIMEOUT: Duration = Duration::from_secs(30);
-const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(120);
+// Import test utilities from mod
+mod common;
+use common::{setup_test_dir, TEST_TIMEOUT};
 
 #[cfg(test)]
 mod download_tests {
     use super::*;
-
-    // Helper function to create test downloads directory
-    async fn setup_test_dir() -> PathBuf {
-        let test_dir = PathBuf::from(TEST_DOWNLOADS_DIR);
-        if !test_dir.exists() {
-            tokio::fs::create_dir_all(&test_dir).await.unwrap();
-        }
-        test_dir
-    }
 
     #[tokio::test]
     async fn test_filename_sanitization() {
@@ -90,7 +83,7 @@ mod download_tests {
 
     #[tokio::test]
     async fn test_file_download_basic() {
-        let test_dir = setup_test_dir().await;
+        let test_dir = setup_test_dir().await.join("unit").join("basic");
 
         // Test downloading a small binary file
         let test_file_path = test_dir.join("test_download.bin");
@@ -98,10 +91,7 @@ mod download_tests {
 
         match timeout(TEST_TIMEOUT, download_future).await {
             Ok(Ok(bytes_downloaded)) => {
-                println!(
-                    "Downloaded {} bytes to {:?}",
-                    bytes_downloaded, test_file_path
-                );
+                println!("Downloaded {} bytes to {:?}", bytes_downloaded, test_file_path);
                 assert!(test_file_path.exists());
                 assert!(bytes_downloaded > 0);
 
@@ -121,7 +111,7 @@ mod download_tests {
 
     #[tokio::test]
     async fn test_file_download_error_handling() {
-        let test_dir = setup_test_dir().await;
+        let test_dir = setup_test_dir().await.join("unit").join("errors");
 
         // Test invalid URL
         let invalid_file_path = test_dir.join("invalid_download.bin");
@@ -150,7 +140,7 @@ mod download_tests {
 
     #[tokio::test]
     async fn test_directory_creation() {
-        let test_dir = setup_test_dir().await;
+        let test_dir = setup_test_dir().await.join("unit").join("directories");
         let nested_dir = test_dir.join("nested").join("deeply").join("nested");
         let test_file_path = nested_dir.join("test_file.bin");
 
@@ -173,145 +163,8 @@ mod download_tests {
     }
 
     #[tokio::test]
-    async fn test_mangadex_chapter_download() {
-        let test_dir = setup_test_dir().await.join("mangadex_test");
-        let source = MangaDexSource::new();
-
-        // Search for a short oneshot or simple manga
-        let search_params = SearchParams {
-            query: "oneshot".to_string(),
-            limit: Some(1),
-            offset: None,
-            include_tags: vec![],
-            exclude_tags: vec![],
-            sort_by: Some(SortOrder::UpdatedAt),
-        };
-
-        let search_future = source.search(search_params);
-        match timeout(TEST_TIMEOUT, search_future).await {
-            Ok(Ok(manga_list)) if !manga_list.is_empty() => {
-                let manga = &manga_list[0];
-                println!("Found test manga: {}", manga.title);
-
-                let chapters_future = source.get_chapters(&manga.id);
-                match timeout(TEST_TIMEOUT, chapters_future).await {
-                    Ok(Ok(chapters)) if !chapters.is_empty() => {
-                        let chapter = &chapters[0];
-                        println!("Found test chapter: {}", chapter.title);
-
-                        // Test the download
-                        let download_future = source.download_chapter(&chapter.id, &test_dir);
-                        match timeout(DOWNLOAD_TIMEOUT, download_future).await {
-                            Ok(Ok(chapter_path)) => {
-                                println!(
-                                    "MangaDex chapter downloaded to: {}",
-                                    chapter_path.display()
-                                );
-                                assert!(chapter_path.exists());
-
-                                // Check that files were actually downloaded
-                                if let Ok(entries) = tokio::fs::read_dir(&chapter_path).await {
-                                    let mut count = 0;
-                                    let mut entries = entries;
-                                    while let Ok(Some(_)) = entries.next_entry().await {
-                                        count += 1;
-                                    }
-                                    println!("Downloaded {} files", count);
-                                    assert!(count > 0, "No files were downloaded");
-                                }
-                            }
-                            Ok(Err(e)) => {
-                                println!("MangaDex download failed: {}", e);
-                                // Don't fail test for site/network issues
-                            }
-                            Err(_) => {
-                                println!("MangaDex download timed out");
-                            }
-                        }
-                    }
-                    Ok(Ok(_)) => println!("No chapters available for download test"),
-                    Ok(Err(e)) => println!("Failed to get chapters: {}", e),
-                    Err(_) => println!("Get chapters timed out"),
-                }
-            }
-            Ok(Ok(_)) => println!("No manga found for download test"),
-            Ok(Err(e)) => println!("Search failed: {}", e),
-            Err(_) => println!("Search timed out"),
-        }
-    }
-
-    #[tokio::test]
-    async fn test_kissmanga_chapter_download() {
-        let test_dir = setup_test_dir().await.join("kissmanga_test");
-        let source = KissMangaSource::new();
-
-        // Search for a popular manga that's likely to have working chapters
-        let search_params = SearchParams {
-            query: "naruto".to_string(),
-            limit: Some(1),
-            offset: None,
-            include_tags: vec![],
-            exclude_tags: vec![],
-            sort_by: None,
-        };
-
-        let search_future = source.search(search_params);
-        match timeout(TEST_TIMEOUT, search_future).await {
-            Ok(Ok(manga_list)) if !manga_list.is_empty() => {
-                let manga = &manga_list[0];
-                println!("Found KissManga test manga: {}", manga.title);
-
-                let chapters_future = source.get_chapters(&manga.id);
-                match timeout(TEST_TIMEOUT, chapters_future).await {
-                    Ok(Ok(chapters)) if !chapters.is_empty() => {
-                        // Try the first chapter
-                        let chapter = &chapters[0];
-                        println!("Found KissManga test chapter: {}", chapter.title);
-
-                        // Test the download with KissManga's custom implementation
-                        let download_future = source.download_chapter(&chapter.id, &test_dir);
-                        match timeout(DOWNLOAD_TIMEOUT, download_future).await {
-                            Ok(Ok(chapter_path)) => {
-                                println!(
-                                    "KissManga chapter downloaded to: {}",
-                                    chapter_path.display()
-                                );
-                                assert!(chapter_path.exists());
-
-                                // Check that files were actually downloaded
-                                if let Ok(entries) = tokio::fs::read_dir(&chapter_path).await {
-                                    let mut count = 0;
-                                    let mut entries = entries;
-                                    while let Ok(Some(_)) = entries.next_entry().await {
-                                        count += 1;
-                                    }
-                                    println!("Downloaded {} files", count);
-                                    assert!(count > 0, "No files were downloaded");
-                                }
-                            }
-                            Ok(Err(e)) => {
-                                println!("KissManga download failed: {}", e);
-                                // Don't fail test for site/network issues
-                            }
-                            Err(_) => {
-                                println!("KissManga download timed out");
-                            }
-                        }
-                    }
-                    Ok(Ok(_)) => println!("No chapters available for KissManga download test"),
-                    Ok(Err(e)) => println!("Failed to get KissManga chapters: {}", e),
-                    Err(_) => println!("Get KissManga chapters timed out"),
-                }
-            }
-            Ok(Ok(_)) => println!("No KissManga manga found for download test"),
-            Ok(Err(e)) => println!("KissManga search failed: {}", e),
-            Err(_) => println!("KissManga search timed out"),
-        }
-    }
-
-    #[tokio::test]
     async fn test_download_path_structure() {
-        let test_dir = setup_test_dir().await.join("path_structure_test");
+        let test_dir = setup_test_dir().await.join("unit").join("path_structure");
 
         // Test that download paths are created correctly
         let manga_title = "Test Manga: Special/Characters\\Edition";
@@ -324,19 +177,14 @@ mod download_tests {
         let expected_chapter_dir = expected_manga_dir.join(&sanitized_chapter);
 
         // Create the directory structure
-        tokio::fs::create_dir_all(&expected_chapter_dir)
-            .await
-            .unwrap();
+        tokio::fs::create_dir_all(&expected_chapter_dir).await.unwrap();
 
         // Verify the structure
         assert!(expected_manga_dir.exists());
         assert!(expected_chapter_dir.exists());
 
         println!("Created manga directory: {}", expected_manga_dir.display());
-        println!(
-            "Created chapter directory: {}",
-            expected_chapter_dir.display()
-        );
+        println!("Created chapter directory: {}", expected_chapter_dir.display());
 
         // Test that paths don't contain dangerous characters
         let manga_path_str = expected_manga_dir.to_string_lossy();
@@ -353,27 +201,18 @@ mod download_tests {
 
     #[tokio::test]
     async fn test_concurrent_downloads() {
-        let test_dir = setup_test_dir().await.join("concurrent_test");
+        let test_dir = setup_test_dir().await.join("unit").join("concurrent");
 
         // Test downloading multiple small files concurrently
         let download_tasks = vec![
-            (
-                "https://httpbin.org/bytes/256",
-                test_dir.join("concurrent_file_0.bin"),
-            ),
-            (
-                "https://httpbin.org/bytes/512",
-                test_dir.join("concurrent_file_1.bin"),
-            ),
-            (
-                "https://httpbin.org/bytes/128",
-                test_dir.join("concurrent_file_2.bin"),
-            ),
+            ("https://httpbin.org/bytes/256".to_string(), test_dir.join("concurrent_file_0.bin")),
+            ("https://httpbin.org/bytes/512".to_string(), test_dir.join("concurrent_file_1.bin")),
+            ("https://httpbin.org/bytes/128".to_string(), test_dir.join("concurrent_file_2.bin")),
         ];
 
         let mut handles = Vec::new();
         for (url, path) in download_tasks {
-            let handle = tokio::spawn(async move { download_file(url, &path).await });
+            let handle = tokio::spawn(async move { download_file(&url, &path).await });
             handles.push(handle);
         }
 
@@ -399,10 +238,7 @@ mod download_tests {
                 }
 
                 if success_count > 0 {
-                    println!(
-                        "Concurrent downloads completed: {}/{} successful",
-                        success_count, 3
-                    );
+                    println!("Concurrent downloads completed: {}/{} successful", success_count, 3);
                 } else {
                     println!("All concurrent downloads failed (likely network issues)");
                 }
@@ -415,7 +251,7 @@ mod download_tests {
 
     #[tokio::test]
     async fn test_download_resume_behavior() {
-        let test_dir = setup_test_dir().await;
+        let test_dir = setup_test_dir().await.join("unit").join("resume");
         let test_file_path = test_dir.join("resume_test.bin");
 
         // First download
@@ -427,7 +263,7 @@ mod download_tests {
                 let metadata1 = tokio::fs::metadata(&test_file_path).await.unwrap();
 
                 // Wait a bit to ensure different modification time
-                tokio::time::sleep(Duration::from_millis(100)).await;
+                tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
                 // Second download to same path (should overwrite)
                 match download_file("https://httpbin.org/bytes/2048", &test_file_path).await {

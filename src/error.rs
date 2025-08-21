@@ -19,6 +19,7 @@
 //!
 //! ```rust
 //! use tosho::prelude::*;
+//! use tosho::error::{Result, Error};
 //!
 //! # async fn example() -> Result<()> {
 //! let sources = Sources::new();
