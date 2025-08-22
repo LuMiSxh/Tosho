@@ -1,9 +1,10 @@
 [package]
 name = "tosho"
 version = "0.1.0"
+authors = ["LuMiSxh"]
 edition = "2024"
 description = "A unified manga source library for Rust"
-license = "MIT OR Apache-2.0"
+license = "MIT"
 repository = "https://github.com/lumisxh/tosho"
 keywords = ["manga", "scraping", "async", "library"]
 categories = ["web-programming", "api-bindings"]
