@@ -25,7 +25,6 @@ Add Tosho to your `Cargo.toml`:
 ```toml
 [dependencies]
 tosho = "0.1"  # All sources included by default
-tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
 ```
 
 ### Feature Flags
@@ -217,41 +216,6 @@ The library is organized into several key modules:
 - [`download`]: Simple download utilities for individual files
 - [`sources`]: Built-in source implementations (MangaDex, KissManga, Madara)
 
-### Core Types
-
-```rust
-// Manga metadata
-pub struct Manga {
-    pub id: String,
-    pub title: String,
-    pub cover_url: Option<String>,
-    pub authors: Vec<String>,
-    pub description: Option<String>,
-    pub tags: Vec<String>,
-    pub source_id: String,
-
-    // Available with "sqlx" feature
-    #[cfg(feature = "chrono")]
-    pub created_at: Option<DateTime<Utc>>,
-    #[cfg(feature = "chrono")]
-    pub updated_at: Option<DateTime<Utc>>,
-}
-
-// Chapter information
-pub struct Chapter {
-    pub id: String,
-    pub number: f64,
-    pub title: String,
-    pub pages: Vec<String>,
-    pub manga_id: String,
-    pub source_id: String,
-
-    // Available with "sqlx" feature
-    #[cfg(feature = "chrono")]
-    pub created_at: Option<DateTime<Utc>>,
-}
-```
-
 ## Available Sources
 
 Tosho currently supports the following manga sources:
@@ -345,26 +309,6 @@ let manga_list = html::parse_manga_items(&document, ".manga-item", |element| {
     // Extract manga data from each element
     Some(manga)
 });
-```
-
-## Error Handling
-
-Tosho provides comprehensive error types:
-
-```rust
-use tosho::{Result, Error};
-
-match sources.search("query").flatten().await {
-    Ok(results) => println!("Found {} results", results.len()),
-    Err(Error::Network(e)) => println!("Network error: {}", e),
-    Err(Error::RateLimit { retry_after }) => {
-        println!("Rate limited, retry after: {:?}", retry_after);
-    }
-    Err(Error::Source { src, message }) => {
-        println!("Source {} error: {}", src, message);
-    }
-    Err(e) => println!("Other error: {}", e),
-}
 ```
 
 ## Download Utilities
