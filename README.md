@@ -1,7 +1,7 @@
 # Tosho - Manga Aggregation Library
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Build Status](https://github.com/lumisxh/tosho/workflows/Release%20and%20Documentation/badge.svg)](https://github.com/lumisxh/tosho/actions)
+[![Build Status](https://github.com/lumisxh/tosho/workflows/Release/badge.svg)](https://github.com/lumisxh/tosho/actions)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://lumisxh.github.io/tosho/)
 
 **Tosho** is a high-performance, asynchronous Rust library that provides a unified interface for searching and downloading manga content from multiple sources. Built with async/await and designed for speed, reliability, and ease of use, Tosho offers a fluent API for manga discovery, chapter management, and content aggregation.
@@ -89,7 +89,7 @@ async fn main() -> Result<()> {
 ### API Documentation
 
 Comprehensive API documentation is automatically generated and available at:
-**[https://lumisxh.github.io/tosho/](https://lumisxh.github.io/tosho/)**
+**[https://lumisxh.github.io/tosho/](https://lumisxh.github.io/Tosho/)**
 
 The documentation includes:
 
