@@ -1,6 +1,6 @@
 //! Source-specific functionality tests
 //!
-//! Tests individual manga sources (MangaDx, KissManga, etc.)
+//! Tests individual manga sources (MangaDex, KissManga, etc.)
 
 use tokio::time::timeout;
 use tosho::prelude::*;
@@ -37,7 +37,7 @@ mod source_tests {
 
         match search_result {
             Ok(Ok(manga_list)) => {
-                println!("MangaDx search: {} results", manga_list.len());
+                println!("MangaDex search: {} results", manga_list.len());
                 assert!(manga_list.len() <= 3);
                 for manga in &manga_list {
                     assert!(!manga.id.is_empty());
@@ -46,10 +46,10 @@ mod source_tests {
                 }
             }
             Ok(Err(e)) => {
-                println!("MangaDx search failed: {}", e);
+                println!("MangaDex search failed: {}", e);
             }
             Err(_) => {
-                println!("MangaDx search timeout");
+                println!("MangaDex search timeout");
             }
         }
     }
@@ -126,7 +126,7 @@ mod source_tests {
                         match timeout(DOWNLOAD_TIMEOUT, download_future).await {
                             Ok(Ok(chapter_path)) => {
                                 println!(
-                                    "MangaDx chapter downloaded to: {}",
+                                    "MangaDex chapter downloaded to: {}",
                                     chapter_path.display()
                                 );
                                 assert!(chapter_path.exists());
@@ -143,11 +143,11 @@ mod source_tests {
                                 }
                             }
                             Ok(Err(e)) => {
-                                println!("MangaDx download failed: {}", e);
+                                println!("MangaDex download failed: {}", e);
                                 // Don't fail test for site/network issues
                             }
                             Err(_) => {
-                                println!("MangaDx download timed out");
+                                println!("MangaDex download timed out");
                             }
                         }
                     }

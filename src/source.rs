@@ -369,7 +369,7 @@ pub trait Source: Send + Sync {
 /// let results = sources.search("one piece").limit(10).flatten().await?;
 ///
 /// // Search specific source
-/// let mangadx_results = sources.search("naruto").from_source("mgd").await?;
+/// let mangadex_results = sources.search("naruto").from_source("mgd").await?;
 ///
 /// // Get source information
 /// println!("Available sources: {:?}", sources.list_ids());

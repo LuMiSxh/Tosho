@@ -32,14 +32,14 @@ tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X" }  # Replace 
 # With SQLx compatibility for database storage
 tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", features = ["sqlx"] }
 
-# Minimal build with only MangaDx
-tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", default-features = false, features = ["source-mangadx"] }
+# Minimal build with only MangaDex
+tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", default-features = false, features = ["source-mangadex"] }
 ```
 
 ### Available Features
 
 - `sqlx` - Adds SQLx derive traits for database compatibility
-- `source-mangadx` - MangaDx source support
+- `source-mangadex` - MangaDex source support
 - `source-kissmanga` - KissManga source support
 - `all-sources` - All available sources (default)
 
@@ -48,13 +48,13 @@ tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", default-feat
 ```rust
 use tosho::prelude::*;
 use tosho::error::Result;
-use tosho::sources::MangaDxSource;
+use tosho::sources::MangaDexSource;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialize sources
     let mut sources = Sources::new();
-    sources.add(MangaDxSource::new());
+    sources.add(MangaDexSource::new());
 
     // Search and process results
     let results = sources
@@ -102,7 +102,7 @@ The documentation includes:
 
 ### Available Sources
 
-- **MangaDx** - Feature: `source-mangadx`
+- **MangaDex** - Feature: `source-mangadex`
 - **KissManga** - Feature: `source-kissmanga`
 
 ## Development Status

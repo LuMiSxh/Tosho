@@ -152,7 +152,7 @@ mod integration_tests {
                 let kmg_results = results.iter().filter(|m| m.source_id == "kmg").count();
 
                 println!(
-                    "MangaDx results: {}, KissManga results: {}",
+                    "MangaDex results: {}, KissManga results: {}",
                     mgd_results, kmg_results
                 );
 
