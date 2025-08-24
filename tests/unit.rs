@@ -38,6 +38,10 @@ mod unit_tests {
             tags: vec!["Action".to_string(), "Adventure".to_string()],
             cover_url: Some("https://example.com/cover.jpg".to_string()),
             source_id: "test".to_string(),
+            #[cfg(feature = "chrono")]
+            created_at: None,
+            #[cfg(feature = "chrono")]
+            updated_at: None,
         };
 
         assert_eq!(manga.id, "test-id");
@@ -61,6 +65,8 @@ mod unit_tests {
             ],
             manga_id: "test-manga".to_string(),
             source_id: "test".to_string(),
+            #[cfg(feature = "chrono")]
+            created_at: None,
         };
 
         assert_eq!(chapter.id, "chapter-1");
@@ -145,6 +151,10 @@ mod unit_tests {
                 tags: vec!["Action".to_string()],
                 cover_url: None,
                 source_id: "test".to_string(),
+                #[cfg(feature = "chrono")]
+                created_at: None,
+                #[cfg(feature = "chrono")]
+                updated_at: None,
             },
             Manga {
                 id: "2".to_string(),
@@ -154,6 +164,10 @@ mod unit_tests {
                 tags: vec!["Action".to_string()],
                 cover_url: None,
                 source_id: "test".to_string(),
+                #[cfg(feature = "chrono")]
+                created_at: None,
+                #[cfg(feature = "chrono")]
+                updated_at: None,
             },
             Manga {
                 id: "3".to_string(),
@@ -163,6 +177,10 @@ mod unit_tests {
                 tags: vec!["Action".to_string()],
                 cover_url: None,
                 source_id: "test2".to_string(),
+                #[cfg(feature = "chrono")]
+                created_at: None,
+                #[cfg(feature = "chrono")]
+                updated_at: None,
             },
         ];
 
@@ -223,6 +241,8 @@ mod unit_tests {
             pages: vec![],
             manga_id: "test".to_string(),
             source_id: "test".to_string(),
+            #[cfg(feature = "chrono")]
+            created_at: None,
         };
 
         assert_eq!(chapter.number, 5.5);
@@ -239,6 +259,10 @@ mod unit_tests {
             tags: vec![],
             cover_url: None,
             source_id: "test".to_string(),
+            #[cfg(feature = "chrono")]
+            created_at: None,
+            #[cfg(feature = "chrono")]
+            updated_at: None,
         };
 
         assert!(manga.authors.is_empty());
@@ -252,6 +276,8 @@ mod unit_tests {
             pages: vec![],
             manga_id: "test".to_string(),
             source_id: "test".to_string(),
+            #[cfg(feature = "chrono")]
+            created_at: None,
         };
 
         assert!(chapter.pages.is_empty());
