@@ -32,7 +32,7 @@ pub async fn setup_test_dir() -> PathBuf {
         "unit/path_structure",
         "unit/concurrent",
         "unit/resume",
-        "sources/mangadx",
+        "sources/mangadex",
         "sources/kissmanga",
         "integration/full_workflow",
         "integration/multi_source",

@@ -253,6 +253,10 @@ pub fn select_all_attr(html: &Html, selector: &str, attr: &str) -> Vec<String> {
 /// #       cover_url: None,
 /// #       description: None,
 /// #       tags: vec![],
+///         #[cfg(feature = "chrono")]
+///         created_at: None,
+///         #[cfg(feature = "chrono")]
+///         updated_at: None,
 ///     })
 /// });
 /// ```

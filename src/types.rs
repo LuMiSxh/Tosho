@@ -20,6 +20,10 @@
 //!     cover_url: Some("https://example.com/cover.jpg".to_string()),
 //!     description: Some("Epic pirate adventure".to_string()),
 //!     tags: vec!["Action".to_string(), "Adventure".to_string()],
+//!     #[cfg(feature = "chrono")]
+//!     created_at: None,
+//!     #[cfg(feature = "chrono")]
+//!     updated_at: None,
 //! };
 //! ```
 
@@ -60,6 +64,10 @@ use sqlx::FromRow;
 ///     cover_url: Some("https://example.com/cover.jpg".to_string()),
 ///     description: Some("A story about pirates".to_string()),
 ///     tags: vec!["Action".to_string(), "Adventure".to_string()],
+///     #[cfg(feature = "chrono")]
+///     created_at: None,
+///     #[cfg(feature = "chrono")]
+///     updated_at: None,
 /// };
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -130,6 +138,8 @@ pub struct Manga {
 ///     ],
 ///     manga_id: "one-piece".to_string(),
 ///     source_id: "mangadex".to_string(),
+///     #[cfg(feature = "chrono")]
+///     created_at: None,
 /// };
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]

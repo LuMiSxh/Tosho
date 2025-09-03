@@ -136,7 +136,7 @@ struct MangaDexChapterPages {
 /// MangaDex source implementation for accessing manga from MangaDex.org.
 ///
 /// This source provides access to the MangaDex API, supporting search functionality,
-/// chapter retrieval, and image downloads. MangaDx is one of the largest open-source
+/// chapter retrieval, and image downloads. MangaDex is one of the largest open-source
 /// manga platforms with extensive multilingual support.
 ///
 /// # Features
