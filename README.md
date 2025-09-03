@@ -2,17 +2,33 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Tosho** is a high-performance, async manga aggregation library that provides a unified interface for searching and downloading manga content from multiple sources. Built with Rust's async/await and designed for speed, reliability, and ease of use.
+**Tosho** is a high-performance, async manga aggregation library that provides a unified interface for searching, downloading, and converting manga content from multiple sources. Built with Rust's async/await and designed for speed, reliability, and ease of use.
 
 > **Note**: This project is currently in development and not yet ready for production use.
 
 ## Features
+
+### CLI Interface
+
+### Modern Terminal User Interface
+
+Tosho includes a beautiful terminal user interface with:
+
+- **Full-Screen Interface** - Modern TUI with multiple panels and real-time updates
+- **Interactive Navigation** - Keyboard-driven interface with intuitive controls
+- **Visual Progress Tracking** - Live download monitoring with progress bars
+- **Multi-Tab Layout** - Organized interface for search, downloads, conversion, and source management
+- **Ebook Conversion** - Convert downloaded manga to CBZ and EPUB formats
+- **Responsive Design** - Adapts to different terminal sizes and configurations
+
+### Library Features
 
 - **High Performance**: Built on tokio with parallel processing using rayon
 - **Async/Await**: Full async support for concurrent operations
 - **Unified API**: Search across multiple manga sources with a single interface
 - **Fluent Builder**: Chain search parameters and execution strategies elegantly
 - **Integrated Downloads**: Direct chapter downloading through source implementations
+- **Ebook Conversion**: Convert manga to CBZ and EPUB formats with automatic metadata
 - **Rate Limiting**: Per-source rate limiting to respect website policies
 - **Robust Error Handling**: Comprehensive error types with detailed context
 - **Result Processing**: Built-in deduplication, sorting, and filtering capabilities
@@ -20,12 +36,26 @@
 
 ## Quick Start
 
+### TUI Usage (Recommended for End Users)
+
+```bash
+# Build with TUI feature (automatically includes conversion)
+cargo build --release --features tui
+
+# Launch the terminal user interface
+./target/release/tosho-tui
+
+# Navigate with Tab, arrow keys, and keyboard shortcuts
+# Search, browse, download, and convert manga in a beautiful full-screen interface
+```
+
+### Library Usage (For Developers)
+
 Add Tosho to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tosho = "0.1"  # All sources included by default
-tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }
+tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X" }  # Replace `vX.X.X` with the version you want to use
 ```
 
 ### Feature Flags
@@ -35,20 +65,22 @@ Tosho supports several feature flags to customize your build:
 ```toml
 [dependencies]
 # Default: includes all sources
-tosho = "0.1"
+tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X" }
 
 # With SQLx compatibility for database storage
-tosho = { version = "0.1", features = ["sqlx"] }
+tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", features = ["sqlx"] }
 
 # Minimal build with only MangaDex
-tosho = { version = "0.1", default-features = false, features = ["source-mangadex"] }
+tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", default-features = false, features = ["source-mangadex"] }
 
 # Custom feature combinations
-tosho = { version = "0.1", features = ["sqlx", "source-mangadex", "source-kissmanga"] }
+tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", features = ["tui", "sqlx", "source-mangadex", "source-kissmanga"] }
 ```
 
 **Available Features:**
 
+- `tui` - Modern terminal user interface with full-screen layout, real-time updates, and ebook conversion
+- `conversion` - Standalone ebook conversion functionality (CBZ/EPUB) using hozon (automatically included with `tui`)
 - `sqlx` - Adds SQLx derive traits to `Manga` and `Chapter` for database compatibility
 - `source-mangadex` - MangaDex source support
 - `source-kissmanga` - KissManga source support
@@ -78,7 +110,7 @@ async fn main() -> Result<()> {
 
     println!("Found {} unique results", results.len());
 
-    // Download a chapter
+    // Download and optionally convert a chapter
     if let Some(manga) = results.first() {
         let source = sources.get(&manga.source_id).unwrap();
         let chapters = source.get_chapters(&manga.id).await?;
@@ -88,6 +120,67 @@ async fn main() -> Result<()> {
             let chapter_path = source.download_chapter(&chapter.id, &download_dir).await?;
 
             println!("Downloaded to: {}", chapter_path.display());
+        }
+
+        }
+    }
+
+    Ok(())
+}
+```
+
+### With TUI Conversion Features
+
+```rust
+use tosho::prelude::*;
+use std::path::PathBuf;
+
+#[cfg(feature = "conversion")]
+use tosho::tui::{convert_manga_with_metadata, ConversionConfig, EbookFormat};
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let mut sources = Sources::new();
+    sources.add(tosho::sources::MangaDexSource::new());
+
+    let results = sources
+        .search("one piece")
+        .limit(20)
+        .sort_by(SortOrder::UpdatedAt)
+        .flatten()
+        .await?
+        .dedupe_by_title()
+        .sort_by_relevance();
+
+    println!("Found {} unique results", results.len());
+
+    // Download and convert to ebook format (requires "tui" feature)
+    #[cfg(feature = "tui")]
+    if let Some(manga) = results.first() {
+        let source = sources.get(&manga.source_id).unwrap();
+        let chapters = source.get_chapters(&manga.id).await?;
+
+        if let Some(chapter) = chapters.first() {
+            let download_dir = std::path::Path::new("./downloads");
+            let chapter_path = source.download_chapter(&chapter.id, &download_dir).await?;
+
+            println!("Downloaded to: {}", chapter_path.display());
+
+            // Convert to ebook format
+            let config = ConversionConfig {
+                output_format: EbookFormat::Epub,
+                output_path: PathBuf::from("./converted"),
+                ..Default::default()
+            };
+
+            let output_path = convert_manga_with_metadata(
+                manga,
+                &[chapter.clone()],
+                chapter_path,
+                config
+            ).await?;
+
+            println!("Converted to: {}", output_path.display());
         }
     }
 
@@ -391,7 +484,7 @@ When the `sqlx` feature is enabled, `Manga` and `Chapter` structs derive `FromRo
 
 ```toml
 [dependencies]
-tosho = { version = "0.1", features = ["sqlx"] }
+tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", features = ["sqlx"] }
 sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio-rustls"] }
 ```
 
@@ -418,7 +511,31 @@ async fn main() -> Result<()> {
 }
 ```
 
-**Note**: Tosho only provides SQLx-compatible structs. Database schema design, migrations, and query logic are left to the user for maximum flexibility.
+## TUI Documentation
+
+For detailed TUI usage, keyboard shortcuts, and configuration options, see [TUI_README.md](TUI_README.md).
+
+### TUI Quick Start
+
+```bash
+# Launch the terminal user interface (includes conversion support)
+tosho-tui
+
+# Use Tab to switch between sections:
+# - Home: Welcome and help
+# - Search: Find manga across sources
+# - Downloads: Monitor download progress
+# - Convert: Convert manga to ebook formats (CBZ/EPUB)
+# - Sources: View available sources
+# - Help: Complete keyboard shortcuts
+
+# Navigation:
+# - Arrow keys: Navigate lists
+# - Enter: Select items
+# - s or /: Start search
+# - c: Download and convert (in manga details)
+# - q: Quit application
+```
 
 ## License
 

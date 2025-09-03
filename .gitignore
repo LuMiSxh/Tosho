@@ -1,6 +1,7 @@
 /target
 examples/
 .idea
+converted
 
 # Test artifacts
 /tests/downloads/

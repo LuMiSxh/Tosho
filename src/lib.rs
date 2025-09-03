@@ -137,6 +137,9 @@ pub mod source;
 pub mod sources;
 pub mod types;
 
+#[cfg(feature = "tui")]
+pub mod tui;
+
 /// Prelude module for convenient imports.
 ///
 /// This module re-exports the most commonly used types and traits, allowing you to
@@ -160,6 +163,9 @@ pub mod prelude {
         source::{Source, Sources},
         types::{Chapter, Manga, SearchParams, SortOrder},
     };
+
+    #[cfg(feature = "tui")]
+    pub use crate::tui::*;
 }
 
 // Re-export main types at crate root for direct access
