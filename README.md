@@ -63,6 +63,9 @@ tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X" }  # Replace 
 # With SQLx compatibility for database storage
 tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", features = ["sqlx"] }
 
+# With Specta support for type-safe APIs
+tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", features = ["specta"] }
+
 # Minimal build with only MangaDex
 tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", default-features = false, features = ["source-mangadex"] }
 ```
@@ -70,6 +73,8 @@ tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", default-feat
 ### Available Features
 
 - `sqlx` - Adds SQLx derive traits for database compatibility
+- `specta` - Adds Specta derive traits for type-safe APIs
+- `tui` - Full terminal user interface with conversion features (includes `conversion`)
 - `source-mangadex` - MangaDex source support
 - `source-kissmanga` - KissManga source support
 - `all-sources` - All available sources (default)

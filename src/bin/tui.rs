@@ -26,6 +26,9 @@ use std::{
 use tokio::{sync::mpsc, time::sleep};
 use tosho::prelude::*;
 
+#[cfg(feature = "tui")]
+use arboard::Clipboard;
+
 use tosho::tui::{
     ConversionConfig, ConversionMetadata, EbookFormat, VolumeGrouping, convert_directory,
 };
@@ -57,7 +60,7 @@ enum ModalState {
     ConvertSettings,
     MetadataEditor,
     PathEditor,
-
+    CoverUrlDialog,
     HelpDialog,
 }
 
@@ -171,6 +174,10 @@ struct App {
     status_type: StatusType,
     _last_update: Instant,
 
+    // Cover URL modal state
+    cover_urls: Vec<(String, String)>, // (label, url) pairs
+    cover_url_selected: usize,
+
     // Communication
     event_sender: mpsc::UnboundedSender<AppEvent>,
     event_receiver: mpsc::UnboundedReceiver<AppEvent>,
@@ -260,6 +267,9 @@ impl App {
             status_message: format!("Loaded {} manga sources", source_ids.len()),
             status_type: StatusType::Success,
             _last_update: Instant::now(),
+
+            cover_urls: Vec::new(),
+            cover_url_selected: 0,
 
             event_sender: event_sender.clone(),
             event_receiver,
@@ -532,6 +542,55 @@ impl App {
                 }
                 _ => {}
             },
+            ModalState::CoverUrlDialog => match key {
+                KeyCode::Esc => {
+                    self.modal_state = ModalState::None;
+                    self.cover_urls.clear();
+                    self.cover_url_selected = 0;
+                }
+                KeyCode::Up => {
+                    if !self.cover_urls.is_empty() && self.cover_url_selected > 0 {
+                        self.cover_url_selected -= 1;
+                    }
+                }
+                KeyCode::Down => {
+                    if !self.cover_urls.is_empty()
+                        && self.cover_url_selected < self.cover_urls.len() - 1
+                    {
+                        self.cover_url_selected += 1;
+                    }
+                }
+                KeyCode::Enter | KeyCode::Char('c') => {
+                    if let Some((_label, url)) = self.cover_urls.get(self.cover_url_selected) {
+                        match Clipboard::new() {
+                            Ok(mut clipboard) => match clipboard.set_text(url.clone()) {
+                                Ok(_) => {
+                                    self.set_status(
+                                        format!(
+                                            "URL copied to clipboard: {}",
+                                            &url[..url.len().min(50)]
+                                        ),
+                                        StatusType::Success,
+                                    );
+                                }
+                                Err(_) => {
+                                    self.set_status(
+                                        "Failed to copy URL to clipboard".to_string(),
+                                        StatusType::Error,
+                                    );
+                                }
+                            },
+                            Err(_) => {
+                                self.set_status(
+                                    "Clipboard not available".to_string(),
+                                    StatusType::Warning,
+                                );
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            },
             ModalState::HelpDialog => {
                 if matches!(key, KeyCode::Enter | KeyCode::Esc | KeyCode::Char(' ')) {
                     self.modal_state = ModalState::None;
@@ -659,6 +718,36 @@ impl App {
             }
             KeyCode::Char('a') => {
                 self.download_all_chapters().await?;
+            }
+            KeyCode::Char('c') => {
+                if let Some(ref manga) = self.selected_manga {
+                    if let Some(ref cover_url) = manga.cover_url {
+                        // Prepare cover URLs list
+                        self.cover_urls.clear();
+                        self.cover_urls
+                            .push(("Original Cover".to_string(), cover_url.clone()));
+
+                        // Add thumbnails if it's a MangaDex cover
+                        if cover_url.contains("uploads.mangadex.org") {
+                            self.cover_urls.push((
+                                "256px Thumbnail".to_string(),
+                                format!("{}.256.jpg", cover_url),
+                            ));
+                            self.cover_urls.push((
+                                "512px Thumbnail".to_string(),
+                                format!("{}.512.jpg", cover_url),
+                            ));
+                        }
+
+                        self.cover_url_selected = 0;
+                        self.modal_state = ModalState::CoverUrlDialog;
+                    } else {
+                        self.set_status(
+                            "No cover URL available for this manga".to_string(),
+                            StatusType::Warning,
+                        );
+                    }
+                }
             }
             _ => {}
         }
@@ -1346,15 +1435,15 @@ impl App {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(8), // Manga info
-                Constraint::Min(0),    // Chapters
+                Constraint::Length(10), // Manga info (increased for cover URL)
+                Constraint::Min(0),     // Chapters
             ])
             .margin(1)
             .split(area);
 
         if let Some(ref manga) = self.selected_manga {
             // Manga info
-            let info_text = vec![
+            let mut info_text = vec![
                 Line::from(vec![
                     Span::styled("Title: ", Style::default().fg(theme::ACCENT)),
                     Span::styled(
@@ -1380,6 +1469,25 @@ impl App {
                         Style::default().fg(theme::TEXT_SECONDARY),
                     ),
                 ]),
+            ];
+
+            // Add cover URL if available
+            if manga.cover_url.is_some() {
+                info_text.push(Line::from(vec![
+                    Span::styled("Cover: ", Style::default().fg(theme::ACCENT)),
+                    Span::styled(
+                        "Available (press 'c' to view)",
+                        Style::default().fg(theme::SUCCESS),
+                    ),
+                ]));
+            } else {
+                info_text.push(Line::from(vec![
+                    Span::styled("Cover: ", Style::default().fg(theme::ACCENT)),
+                    Span::styled("Not available", Style::default().fg(theme::TEXT_MUTED)),
+                ]));
+            }
+
+            info_text.extend(vec![
                 Line::from(""),
                 Line::from(vec![Span::styled(
                     "Description: ",
@@ -1392,7 +1500,7 @@ impl App {
                         .unwrap_or("No description available")
                         .to_string(),
                 ),
-            ];
+            ]);
 
             let manga_info = Paragraph::new(info_text)
                 .block(
@@ -1722,6 +1830,7 @@ impl App {
             Line::from("Manga Details:"),
             Line::from("  ↑↓        - Navigate chapters"),
             Line::from("  Enter     - Download chapter"),
+            Line::from("  c         - View & copy cover URLs"),
             Line::from("  a         - Download all chapters"),
             Line::from(""),
             Line::from("Conversion:"),
@@ -1753,6 +1862,7 @@ impl App {
             ModalState::ConvertSettings => self.render_settings_modal(f),
             ModalState::MetadataEditor => self.render_metadata_modal(f),
             ModalState::PathEditor => self.render_path_editor_modal(f),
+            ModalState::CoverUrlDialog => self.render_cover_url_modal(f),
             ModalState::HelpDialog => self.render_help_modal(f),
             ModalState::None => {}
         }
@@ -2088,4 +2198,110 @@ async fn main() -> Result<()> {
     terminal.show_cursor()?;
 
     Ok(())
+}
+
+impl App {
+    fn render_cover_url_modal(&self, f: &mut Frame) {
+        if let Some(ref manga) = self.selected_manga {
+            if !self.cover_urls.is_empty() {
+                let area = self.centered_rect(90, 60, f.size());
+
+                // Create list items for URLs
+                let list_items: Vec<ListItem> = self
+                    .cover_urls
+                    .iter()
+                    .enumerate()
+                    .map(|(i, (label, url))| {
+                        let style = if i == self.cover_url_selected {
+                            Style::default()
+                                .fg(theme::ACCENT)
+                                .add_modifier(Modifier::BOLD)
+                                .bg(Color::Rgb(40, 40, 60))
+                        } else {
+                            Style::default().fg(theme::TEXT_PRIMARY)
+                        };
+
+                        let content = vec![
+                            Line::from(vec![Span::styled(
+                                format!("{}: ", label),
+                                Style::default()
+                                    .fg(theme::ACCENT)
+                                    .add_modifier(Modifier::BOLD),
+                            )]),
+                            Line::from(vec![Span::styled(url.clone(), style)]),
+                            Line::from(""),
+                        ];
+
+                        ListItem::new(content)
+                    })
+                    .collect();
+
+                let mut list_state = ListState::default();
+                list_state.select(Some(self.cover_url_selected));
+
+                let list = List::new(list_items)
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .border_style(Style::default().fg(theme::ACCENT))
+                            .title(format!(" Cover URLs - {} ", manga.title))
+                            .title_style(
+                                Style::default()
+                                    .fg(theme::ACCENT)
+                                    .add_modifier(Modifier::BOLD),
+                            ),
+                    )
+                    .highlight_style(
+                        Style::default()
+                            .fg(theme::ACCENT)
+                            .add_modifier(Modifier::BOLD)
+                            .bg(Color::Rgb(40, 40, 60)),
+                    );
+
+                // Instructions at the bottom
+                let help_text = Paragraph::new(vec![
+                    Line::from(""),
+                    Line::from(vec![
+                        Span::styled(
+                            "↑↓ ",
+                            Style::default()
+                                .fg(theme::ACCENT)
+                                .add_modifier(Modifier::BOLD),
+                        ),
+                        Span::styled("Navigate  ", Style::default().fg(theme::TEXT_MUTED)),
+                        Span::styled(
+                            "Enter/C ",
+                            Style::default()
+                                .fg(theme::ACCENT)
+                                .add_modifier(Modifier::BOLD),
+                        ),
+                        Span::styled("Copy URL  ", Style::default().fg(theme::TEXT_MUTED)),
+                        Span::styled(
+                            "Esc ",
+                            Style::default()
+                                .fg(theme::ACCENT)
+                                .add_modifier(Modifier::BOLD),
+                        ),
+                        Span::styled("Close", Style::default().fg(theme::TEXT_MUTED)),
+                    ]),
+                ])
+                .block(
+                    Block::default()
+                        .borders(Borders::TOP)
+                        .border_style(Style::default().fg(theme::BORDER)),
+                )
+                .alignment(Alignment::Center);
+
+                // Split area for list and help
+                let chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([Constraint::Min(0), Constraint::Length(3)])
+                    .split(area);
+
+                f.render_widget(Clear, area);
+                f.render_stateful_widget(list, chunks[0], &mut list_state.clone());
+                f.render_widget(help_text, chunks[1]);
+            }
+        }
+    }
 }

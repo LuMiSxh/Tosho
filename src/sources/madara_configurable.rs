@@ -13,6 +13,7 @@ pub struct MadaraSelectors {
     pub chapter_links: String,
     pub chapter_titles: String,
     pub chapter_pages: String,
+    pub cover_image: String,
 }
 
 #[derive(Debug, Clone)]
@@ -77,55 +78,64 @@ impl Source for ConfigurableMadaraSource {
             urlencoding::encode(&params.query)
         );
 
-        println!("{}", url);
-
         let html_str = self.client.get_text(&url).await?;
-        let html = net::html::parse(&html_str);
 
-        // Try to get manga links and titles using the existing functions
+        let html = net::html::parse(&html_str);
         let links = net::html::select_all_attr(&html, &self.config.selectors.manga_item, "href");
         let titles = net::html::select_all_text(&html, &self.config.selectors.manga_item);
+        let cover_images =
+            net::html::select_all_attr(&html, &self.config.selectors.cover_image, "src");
 
-        if links.is_empty() {
-            return Ok(vec![]);
-        }
+        let mut manga = Vec::new();
 
-        let manga = links
-            .into_iter()
-            .zip(titles)
-            .filter_map(|(href, title)| {
-                if title.trim().is_empty() || href.trim().is_empty() {
-                    return None;
-                }
+        for ((href, title), cover_img) in links.into_iter().zip(titles).zip(
+            cover_images
+                .into_iter()
+                .chain(std::iter::repeat(String::new())),
+        ) {
+            if title.trim().is_empty() || href.trim().is_empty() {
+                continue;
+            }
 
-                // Extract manga ID from URL path
-                let id = if href.contains("/kissmanga/") {
-                    href.split("/kissmanga/")
-                        .nth(1)?
-                        .trim_end_matches('/')
-                        .to_string()
+            // Extract manga ID from URL path
+            let id = if href.contains("/kissmanga/") {
+                if let Some(id_part) = href.split("/kissmanga/").nth(1) {
+                    id_part.trim_end_matches('/').to_string()
                 } else {
-                    href.split('/')
-                        .filter(|s| !s.is_empty())
-                        .last()?
-                        .to_string()
-                };
+                    continue;
+                }
+            } else {
+                if let Some(id_part) = href.split('/').filter(|s| !s.is_empty()).last() {
+                    id_part.to_string()
+                } else {
+                    continue;
+                }
+            };
 
-                Some(Manga {
-                    id,
-                    title: title.trim().to_string(),
-                    cover_url: None,
-                    authors: vec![],
-                    description: None,
-                    tags: vec![],
-                    source_id: self.id().to_string(),
-                    #[cfg(feature = "sqlx")]
-                    created_at: None,
-                    #[cfg(feature = "sqlx")]
-                    updated_at: None,
-                })
-            })
-            .collect::<Vec<_>>();
+            let cover_url = if !cover_img.trim().is_empty() {
+                if cover_img.starts_with("http") {
+                    Some(cover_img)
+                } else {
+                    Some(self.full_url(&cover_img))
+                }
+            } else {
+                None
+            };
+
+            manga.push(Manga {
+                id,
+                title: title.trim().to_string(),
+                cover_url,
+                authors: vec![],
+                description: None,
+                tags: vec![],
+                source_id: self.id().to_string(),
+                #[cfg(feature = "sqlx")]
+                created_at: None,
+                #[cfg(feature = "sqlx")]
+                updated_at: None,
+            });
+        }
 
         // Apply limit if specified
         let manga = if let Some(limit) = params.limit {
@@ -203,7 +213,6 @@ impl Source for ConfigurableMadaraSource {
         let pages = net::html::select_all_attr(&html, &self.config.selectors.chapter_pages, "src");
 
         if pages.is_empty() {
-            println!("No pages found for chapter: {}", chapter_id);
             return Err(crate::Error::not_found("No pages found"));
         }
 

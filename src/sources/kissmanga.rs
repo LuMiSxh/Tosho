@@ -79,6 +79,7 @@ impl KissMangaSource {
                 chapter_links: ".wp-manga-chapter a".to_string(),
                 chapter_titles: ".wp-manga-chapter a".to_string(),
                 chapter_pages: ".reading-content .page-break img".to_string(),
+                cover_image: ".tab-content-wrap div:nth-child(1) .col-4.col-md-2 a img".to_string(),
             },
         };
         Self {

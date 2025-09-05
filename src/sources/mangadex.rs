@@ -65,7 +65,6 @@ struct MangaDexTagAttributes {
 /// MangaDex relationship structure
 #[derive(Debug, Deserialize)]
 struct MangaDexRelationship {
-    id: String,
     #[serde(rename = "type")]
     rel_type: String,
     attributes: Option<MangaDexRelationshipAttributes>,
@@ -75,6 +74,8 @@ struct MangaDexRelationship {
 #[derive(Debug, Deserialize)]
 struct MangaDexRelationshipAttributes {
     name: Option<String>,
+    #[serde(rename = "fileName")]
+    file_name: Option<String>,
 }
 
 /// MangaDex chapter list response
@@ -219,6 +220,7 @@ impl MangaDexSource {
         let mut query_parts = vec![
             format!("title={}", urlencoding::encode(query)),
             format!("limit={}", params.limit.unwrap_or(20)),
+            "includes[]=cover_art".to_string(),
         ];
 
         // Add order parameters
@@ -340,7 +342,20 @@ impl MangaDexSource {
         })
     }
 
-    /// Map MangaDex manga data to internal Manga structure
+    /// Extract cover filename from relationship data
+    fn extract_cover_filename(&self, data: &MangaDexMangaData) -> Option<String> {
+        data.relationships
+            .iter()
+            .find(|rel| rel.rel_type == "cover_art")
+            .and_then(|rel| {
+                rel.attributes
+                    .as_ref()
+                    .and_then(|attr| attr.file_name.as_ref())
+                    .map(|filename| filename.clone())
+            })
+    }
+
+    /// Map MangaDx manga data to internal Manga structure
     fn map_manga_data_to_manga(&self, data: &MangaDexMangaData) -> Manga {
         let title = Self::extract_best_title(&data.attributes.title);
         let description = Self::extract_best_title(&data.attributes.description);
@@ -366,17 +381,16 @@ impl MangaDexSource {
             .map(|tag| Self::extract_best_title(&tag.attributes.name))
             .collect();
 
-        // Try to find cover art URL from relationships
-        let cover_url = data
-            .relationships
-            .iter()
-            .find(|rel| rel.rel_type == "cover_art")
-            .map(|rel| {
-                format!(
-                    "https://uploads.mangadex.org/covers/{}/{}.jpg",
-                    data.id, rel.id
-                )
-            });
+        // Try to find cover art URL from relationships using reference expansion
+        let cover_url = if let Some(filename) = self.extract_cover_filename(data) {
+            let url = format!(
+                "https://uploads.mangadex.org/covers/{}/{}",
+                data.id, filename
+            );
+            Some(url)
+        } else {
+            None
+        };
 
         Manga {
             id: data.id.clone(),
@@ -440,12 +454,22 @@ impl Source for MangaDexSource {
     async fn get_pages(&self, chapter_id: &str) -> Result<Vec<String>> {
         // First, fetch chapter info to get manga ID
         let chapter_info_url = format!("{}/chapter/{}", self.api_base, chapter_id);
+
         let _chapter_info: MangaDexChapterResponse =
             self.client.get_json(&chapter_info_url).await?;
 
         // Then fetch page URLs from at-home server
         let pages_url = format!("{}/at-home/server/{}", self.api_base, chapter_id);
         let pages_response: MangaDexPagesResponse = self.client.get_json(&pages_url).await?;
+
+        // Validate that we have the necessary data
+        if pages_response.chapter.hash.is_empty() {
+            return Err(crate::Error::parse("Chapter hash is empty".to_string()));
+        }
+
+        if pages_response.base_url.is_empty() {
+            return Err(crate::Error::parse("Base URL is empty".to_string()));
+        }
 
         // Construct full page URLs
         let page_urls: Vec<String> = if !pages_response.chapter.data.is_empty() {
@@ -456,12 +480,13 @@ impl Source for MangaDexSource {
                 .map(|filename| {
                     format!(
                         "{}/data/{}/{}",
-                        pages_response.base_url, pages_response.chapter.hash, filename
+                        pages_response.base_url.trim_end_matches('/'),
+                        pages_response.chapter.hash,
+                        filename
                     )
                 })
                 .collect()
-        } else {
-            // Fallback to data-saver images
+        } else if !pages_response.chapter.data_saver.is_empty() {
             pages_response
                 .chapter
                 .data_saver
@@ -469,10 +494,14 @@ impl Source for MangaDexSource {
                 .map(|filename| {
                     format!(
                         "{}/data-saver/{}/{}",
-                        pages_response.base_url, pages_response.chapter.hash, filename
+                        pages_response.base_url.trim_end_matches('/'),
+                        pages_response.chapter.hash,
+                        filename
                     )
                 })
                 .collect()
+        } else {
+            Vec::new()
         };
 
         if page_urls.is_empty() {
@@ -481,7 +510,6 @@ impl Source for MangaDexSource {
                 chapter_id
             )));
         }
-
         Ok(page_urls)
     }
 }
