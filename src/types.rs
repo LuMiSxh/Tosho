@@ -205,7 +205,7 @@ pub struct Chapter {
 /// * `include_tags` - Only include manga with these tags
 /// * `exclude_tags` - Exclude manga with these tags
 /// * `sort_by` - How to sort the results
-#[derive(Debug, Clone, Default, Builder)]
+#[derive(Debug, Clone, Default, Builder, Serialize, Deserialize)]
 #[builder(setter(into))]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct SearchParams {
@@ -245,7 +245,7 @@ pub struct SearchParams {
 /// // Alphabetical order
 /// let sort = SortOrder::Title;
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum SortOrder {
     Relevance,
