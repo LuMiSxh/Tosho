@@ -335,7 +335,7 @@ impl MangaDexSource {
             pages: vec![], // Pages are fetched separately
             manga_id: manga_id.to_string(),
             source_id: self.id().to_string(),
-            #[cfg(feature = "chrono")]
+            #[cfg(feature = "sqlx")]
             created_at: None,
         })
     }
@@ -390,9 +390,9 @@ impl MangaDexSource {
             },
             tags,
             source_id: self.id().to_string(),
-            #[cfg(feature = "chrono")]
+            #[cfg(feature = "sqlx")]
             created_at: None,
-            #[cfg(feature = "chrono")]
+            #[cfg(feature = "sqlx")]
             updated_at: None,
         }
     }

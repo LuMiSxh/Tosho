@@ -20,9 +20,9 @@
 //!     cover_url: Some("https://example.com/cover.jpg".to_string()),
 //!     description: Some("Epic pirate adventure".to_string()),
 //!     tags: vec!["Action".to_string(), "Adventure".to_string()],
-//!     #[cfg(feature = "chrono")]
+//!     #[cfg(feature = "sqlx")]
 //!     created_at: None,
-//!     #[cfg(feature = "chrono")]
+//!     #[cfg(feature = "sqlx")]
 //!     updated_at: None,
 //! };
 //! ```
@@ -30,8 +30,8 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "chrono")]
-use chrono::{DateTime, Utc};
+#[cfg(feature = "sqlx")]
+use chrono::NaiveDateTime;
 #[cfg(feature = "sqlx")]
 use sqlx::FromRow;
 
@@ -64,14 +64,16 @@ use sqlx::FromRow;
 ///     cover_url: Some("https://example.com/cover.jpg".to_string()),
 ///     description: Some("A story about pirates".to_string()),
 ///     tags: vec!["Action".to_string(), "Adventure".to_string()],
-///     #[cfg(feature = "chrono")]
+///     #[cfg(feature = "sqlx")]
 ///     created_at: None,
-///     #[cfg(feature = "chrono")]
+///     #[cfg(feature = "sqlx")]
 ///     updated_at: None,
 /// };
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "sqlx", derive(FromRow))]
+#[cfg_attr(feature = "sqlx", sqlx(rename_all = "snake_case"))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct Manga {
     /// Unique identifier within the source
     pub id: String,
@@ -99,14 +101,14 @@ pub struct Manga {
     pub source_id: String,
 
     /// Creation timestamp (for database users)
-    #[cfg(feature = "chrono")]
+    #[cfg(feature = "sqlx")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<DateTime<Utc>>,
+    pub created_at: Option<NaiveDateTime>,
 
     /// Last update timestamp (for database users)
-    #[cfg(feature = "chrono")]
+    #[cfg(feature = "sqlx")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<NaiveDateTime>,
 }
 
 /// Represents a single chapter of a manga.
@@ -138,12 +140,14 @@ pub struct Manga {
 ///     ],
 ///     manga_id: "one-piece".to_string(),
 ///     source_id: "mangadex".to_string(),
-///     #[cfg(feature = "chrono")]
+///     #[cfg(feature = "sqlx")]
 ///     created_at: None,
 /// };
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "sqlx", derive(FromRow))]
+#[cfg_attr(feature = "sqlx", sqlx(rename_all = "snake_case"))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct Chapter {
     /// Unique identifier within the source
     pub id: String,
@@ -166,9 +170,9 @@ pub struct Chapter {
     pub source_id: String,
 
     /// Creation timestamp (for database users)
-    #[cfg(feature = "chrono")]
+    #[cfg(feature = "sqlx")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<DateTime<Utc>>,
+    pub created_at: Option<NaiveDateTime>,
 }
 
 /// Search parameters for querying manga across sources.
@@ -203,6 +207,7 @@ pub struct Chapter {
 /// * `sort_by` - How to sort the results
 #[derive(Debug, Clone, Default, Builder)]
 #[builder(setter(into))]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct SearchParams {
     pub query: String,
     #[builder(default)]
@@ -241,6 +246,7 @@ pub struct SearchParams {
 /// let sort = SortOrder::Title;
 /// ```
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum SortOrder {
     Relevance,
     UpdatedAt,

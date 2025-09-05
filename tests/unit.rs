@@ -38,9 +38,9 @@ mod unit_tests {
             tags: vec!["Action".to_string(), "Adventure".to_string()],
             cover_url: Some("https://example.com/cover.jpg".to_string()),
             source_id: "test".to_string(),
-            #[cfg(feature = "chrono")]
+            #[cfg(feature = "sqlx")]
             created_at: None,
-            #[cfg(feature = "chrono")]
+            #[cfg(feature = "sqlx")]
             updated_at: None,
         };
 
@@ -65,7 +65,7 @@ mod unit_tests {
             ],
             manga_id: "test-manga".to_string(),
             source_id: "test".to_string(),
-            #[cfg(feature = "chrono")]
+            #[cfg(feature = "sqlx")]
             created_at: None,
         };
 
@@ -151,9 +151,9 @@ mod unit_tests {
                 tags: vec!["Action".to_string()],
                 cover_url: None,
                 source_id: "test".to_string(),
-                #[cfg(feature = "chrono")]
+                #[cfg(feature = "sqlx")]
                 created_at: None,
-                #[cfg(feature = "chrono")]
+                #[cfg(feature = "sqlx")]
                 updated_at: None,
             },
             Manga {
@@ -164,9 +164,9 @@ mod unit_tests {
                 tags: vec!["Action".to_string()],
                 cover_url: None,
                 source_id: "test".to_string(),
-                #[cfg(feature = "chrono")]
+                #[cfg(feature = "sqlx")]
                 created_at: None,
-                #[cfg(feature = "chrono")]
+                #[cfg(feature = "sqlx")]
                 updated_at: None,
             },
             Manga {
@@ -177,9 +177,9 @@ mod unit_tests {
                 tags: vec!["Action".to_string()],
                 cover_url: None,
                 source_id: "test2".to_string(),
-                #[cfg(feature = "chrono")]
+                #[cfg(feature = "sqlx")]
                 created_at: None,
-                #[cfg(feature = "chrono")]
+                #[cfg(feature = "sqlx")]
                 updated_at: None,
             },
         ];
@@ -241,7 +241,7 @@ mod unit_tests {
             pages: vec![],
             manga_id: "test".to_string(),
             source_id: "test".to_string(),
-            #[cfg(feature = "chrono")]
+            #[cfg(feature = "sqlx")]
             created_at: None,
         };
 
@@ -259,9 +259,9 @@ mod unit_tests {
             tags: vec![],
             cover_url: None,
             source_id: "test".to_string(),
-            #[cfg(feature = "chrono")]
+            #[cfg(feature = "sqlx")]
             created_at: None,
-            #[cfg(feature = "chrono")]
+            #[cfg(feature = "sqlx")]
             updated_at: None,
         };
 
@@ -276,7 +276,7 @@ mod unit_tests {
             pages: vec![],
             manga_id: "test".to_string(),
             source_id: "test".to_string(),
-            #[cfg(feature = "chrono")]
+            #[cfg(feature = "sqlx")]
             created_at: None,
         };
 

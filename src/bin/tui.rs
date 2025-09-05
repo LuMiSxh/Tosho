@@ -943,7 +943,7 @@ impl App {
                 pages: vec![],
                 manga_id: manga.id.clone(),
                 source_id: manga.source_id.clone(),
-                #[cfg(feature = "chrono")]
+                #[cfg(feature = "sqlx")]
                 created_at: None,
             },
             Chapter {
@@ -953,7 +953,7 @@ impl App {
                 pages: vec![],
                 manga_id: manga.id.clone(),
                 source_id: manga.source_id.clone(),
-                #[cfg(feature = "chrono")]
+                #[cfg(feature = "sqlx")]
                 created_at: None,
             },
         ];

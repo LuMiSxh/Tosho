@@ -1,6 +1,6 @@
 [package]
 name = "tosho"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["LuMiSxh"]
 edition = "2024"
 description = "A unified manga source library for Rust"
@@ -13,8 +13,10 @@ categories = ["web-programming", "api-bindings"]
 default = ["all-sources"]
 
 # Database compatibility
-sqlx = ["dep:sqlx", "chrono"]
-chrono = ["dep:chrono"]
+sqlx = ["dep:sqlx", "dep:chrono"]
+# Specta support
+specta = ["dep:specta"]
+
 
 # TUI feature (includes conversion functionality)
 tui = [
@@ -68,6 +70,12 @@ regex = "1.10"
 url = "2.4"
 sqlx = { version = "0.8", features = ["chrono"], optional = true }
 chrono = { version = "0.4", features = ["serde"], optional = true }
+specta = { version = "=2.0.0-rc.22", default-features = true, features = [
+    "serde",
+    "serde_json",
+    "chrono",
+    "derive",
+], optional = true }
 
 # TUI dependencies
 ratatui = { version = "0.26", optional = true }

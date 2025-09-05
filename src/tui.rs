@@ -24,9 +24,9 @@
 //!         cover_url: None,
 //!         description: None,
 //!         tags: vec!["Action".to_string()],
-//!         #[cfg(feature = "chrono")]
+//!         #[cfg(feature = "sqlx")]
 //!         created_at: None,
-//!         #[cfg(feature = "chrono")]
+//!         #[cfg(feature = "sqlx")]
 //!         updated_at: None,
 //!     };
 //!
@@ -138,9 +138,9 @@ impl Default for AppState {
 ///     cover_url: None,
 ///     description: None,
 ///     tags: vec![],
-///     #[cfg(feature = "chrono")]
+///     #[cfg(feature = "sqlx")]
 ///     created_at: None,
-///     #[cfg(feature = "chrono")]
+///     #[cfg(feature = "sqlx")]
 ///     updated_at: None,
 /// };
 ///
@@ -188,7 +188,7 @@ pub fn format_manga_title(manga: &Manga) -> Line<'static> {
 ///     pages: vec![],
 ///     manga_id: "one-piece".to_string(),
 ///     source_id: "mangadex".to_string(),
-///     #[cfg(feature = "chrono")]
+///     #[cfg(feature = "sqlx")]
 ///     created_at: None,
 /// };
 ///
