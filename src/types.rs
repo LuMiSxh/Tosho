@@ -206,8 +206,12 @@ pub struct Chapter {
 /// * `exclude_tags` - Exclude manga with these tags
 /// * `sort_by` - How to sort the results
 #[derive(Debug, Clone, Default, Builder, Serialize, Deserialize)]
+#[cfg_attr(
+    feature = "specta",
+    builder(derive(Serialize, Deserialize, specta::Type))
+)]
+#[cfg_attr(not(feature = "specta"), builder(derive(Serialize, Deserialize)))]
 #[builder(setter(into))]
-#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct SearchParams {
     pub query: String,
     #[builder(default)]
