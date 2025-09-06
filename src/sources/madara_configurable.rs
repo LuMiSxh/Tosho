@@ -51,6 +51,16 @@ impl ConfigurableMadaraSource {
 
     // Helper function to resolve relative URLs to absolute ones
     fn full_url(&self, path: &str) -> String {
+        // If path is already an absolute URL, return it as-is
+        if path.starts_with("http") {
+            return path.to_string();
+        }
+
+        // If path already contains the base URL, return it as-is
+        if path.contains(self.config.base_url) {
+            return path.to_string();
+        }
+
         let trimmed_base = self.config.base_url.trim_end_matches('/');
         let trimmed_path = path.trim_start_matches('/');
         format!("{}/{}", trimmed_base, trimmed_path)
@@ -98,7 +108,14 @@ impl Source for ConfigurableMadaraSource {
             }
 
             // The unique ID is the relative path to the manga, without leading/trailing slashes.
-            let id = href.trim_matches('/').to_string();
+            // If href contains the base URL, extract only the relative part
+            let id = if href.contains(&self.config.base_url) {
+                href.replace(&self.config.base_url, "")
+                    .trim_matches('/')
+                    .to_string()
+            } else {
+                href.trim_matches('/').to_string()
+            };
 
             let cover_url = if !cover_img.trim().is_empty() {
                 if cover_img.starts_with("http") {
@@ -136,7 +153,7 @@ impl Source for ConfigurableMadaraSource {
         let url = if manga_id.starts_with("http") {
             manga_id.to_string()
         } else {
-            self.full_url(&format!("kissmanga/{}", manga_id))
+            self.full_url(manga_id)
         };
 
         let html_str = self.client.get_text(&url).await?;
@@ -173,7 +190,11 @@ impl Source for ConfigurableMadaraSource {
     }
 
     async fn get_pages(&self, chapter_id: &str) -> Result<Vec<String>> {
-        let url = self.full_url(chapter_id);
+        let url = if chapter_id.starts_with("http") {
+            chapter_id.to_string()
+        } else {
+            self.full_url(chapter_id)
+        };
 
         let html_str = self.client.get_text(&url).await?;
         let html = net::html::parse(&html_str);
