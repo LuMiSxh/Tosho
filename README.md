@@ -8,51 +8,7 @@
 
 > **Note**: This project is currently in development and not yet ready for production use.
 
-## Features
-
-### CLI Interface
-
-### Modern Terminal User Interface
-
-Tosho includes a beautiful terminal user interface with:
-
-- **Full-Screen Interface** - Modern TUI with multiple panels and real-time updates
-- **Interactive Navigation** - Keyboard-driven interface with intuitive controls
-- **Visual Progress Tracking** - Live download monitoring with progress bars
-- **Multi-Tab Layout** - Organized interface for search, downloads, conversion, and source management
-- **Ebook Conversion** - Convert downloaded manga to CBZ and EPUB formats
-- **Responsive Design** - Adapts to different terminal sizes and configurations
-
-### Library Features
-
-- **High Performance**: Built on tokio with parallel processing using rayon
-- **Unified API**: Search across multiple manga sources with a single interface
-- **Fluent Builder**: Chain search parameters and execution strategies elegantly
-- **Async/Await**: Full async support for concurrent operations
-- **Integrated Downloads**: Direct chapter downloading through source implementations
-- **Ebook Conversion**: Convert manga to CBZ and EPUB formats with automatic metadata
-- **Rate Limiting**: Per-source rate limiting to respect website policies
-- **Result Processing**: Built-in deduplication, sorting, and filtering capabilities
-- **Robust Error Handling**: Comprehensive error types with detailed context
-- **Extensible Architecture**: Easy to add new manga sources
-- **Database Integration**: Optional SQLx compatibility for data persistence
-
-## Installation
-
-### TUI Usage (Recommended for End Users)
-
-```bash
-# Build with TUI feature (automatically includes conversion)
-cargo build --release --features tui
-
-# Launch the terminal user interface
-./target/release/tosho-tui
-
-# Navigate with Tab, arrow keys, and keyboard shortcuts
-# Search, browse, download, and convert manga in a beautiful full-screen interface
-```
-
-### Library Usage (For Developers)
+## Library Usage
 
 Add Tosho to your `Cargo.toml`:
 
@@ -74,7 +30,6 @@ tosho = { git = "https://github.com/lumisxh/tosho", tag = "vX.X.X", default-feat
 
 - `sqlx` - Adds SQLx derive traits for database compatibility
 - `specta` - Adds Specta derive traits for type-safe APIs
-- `tui` - Full terminal user interface with conversion features (includes `conversion`)
 - `source-mangadex` - MangaDex source support
 - `source-kissmanga` - KissManga source support
 - `all-sources` - All available sources (default)

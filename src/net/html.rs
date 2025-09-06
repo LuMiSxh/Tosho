@@ -246,6 +246,7 @@ pub fn select_all_attr(html: &Html, selector: &str, attr: &str) -> Vec<String> {
 ///
 ///     Some(Manga {
 ///         id: title.clone(),
+///         url: None,
 ///         title,
 ///         authors: vec![author],
 ///         source_id: "example".to_string(),
@@ -253,10 +254,6 @@ pub fn select_all_attr(html: &Html, selector: &str, attr: &str) -> Vec<String> {
 /// #       cover_url: None,
 /// #       description: None,
 /// #       tags: vec![],
-///         #[cfg(feature = "sqlx")]
-///         created_at: None,
-///         #[cfg(feature = "sqlx")]
-///         updated_at: None,
 ///     })
 /// });
 /// ```

@@ -32,16 +32,13 @@ mod unit_tests {
     fn test_manga_struct() {
         let manga = Manga {
             id: "test-id".to_string(),
+            url: None,
             title: "Test Manga".to_string(),
             authors: vec!["Author 1".to_string(), "Author 2".to_string()],
             description: Some("A test manga description".to_string()),
             tags: vec!["Action".to_string(), "Adventure".to_string()],
             cover_url: Some("https://example.com/cover.jpg".to_string()),
             source_id: "test".to_string(),
-            #[cfg(feature = "sqlx")]
-            created_at: None,
-            #[cfg(feature = "sqlx")]
-            updated_at: None,
         };
 
         assert_eq!(manga.id, "test-id");
@@ -65,8 +62,6 @@ mod unit_tests {
             ],
             manga_id: "test-manga".to_string(),
             source_id: "test".to_string(),
-            #[cfg(feature = "sqlx")]
-            created_at: None,
         };
 
         assert_eq!(chapter.id, "chapter-1");
@@ -145,42 +140,33 @@ mod unit_tests {
         let manga_list = vec![
             Manga {
                 id: "1".to_string(),
+                url: None,
                 title: "One Piece".to_string(),
                 authors: vec!["Oda".to_string()],
                 description: None,
                 tags: vec!["Action".to_string()],
                 cover_url: None,
                 source_id: "test".to_string(),
-                #[cfg(feature = "sqlx")]
-                created_at: None,
-                #[cfg(feature = "sqlx")]
-                updated_at: None,
             },
             Manga {
                 id: "2".to_string(),
+                url: None,
                 title: "Naruto".to_string(),
                 authors: vec!["Kishimoto".to_string()],
                 description: None,
                 tags: vec!["Action".to_string()],
                 cover_url: None,
                 source_id: "test".to_string(),
-                #[cfg(feature = "sqlx")]
-                created_at: None,
-                #[cfg(feature = "sqlx")]
-                updated_at: None,
             },
             Manga {
                 id: "3".to_string(),
+                url: None,
                 title: "One Piece".to_string(), // Duplicate title
                 authors: vec!["Oda".to_string()],
                 description: None,
                 tags: vec!["Action".to_string()],
                 cover_url: None,
                 source_id: "test2".to_string(),
-                #[cfg(feature = "sqlx")]
-                created_at: None,
-                #[cfg(feature = "sqlx")]
-                updated_at: None,
             },
         ];
 
@@ -241,8 +227,6 @@ mod unit_tests {
             pages: vec![],
             manga_id: "test".to_string(),
             source_id: "test".to_string(),
-            #[cfg(feature = "sqlx")]
-            created_at: None,
         };
 
         assert_eq!(chapter.number, 5.5);
@@ -253,16 +237,13 @@ mod unit_tests {
     fn test_empty_collections() {
         let manga = Manga {
             id: "test".to_string(),
+            url: None,
             title: "Test".to_string(),
             authors: vec![],
             description: None,
             tags: vec![],
             cover_url: None,
             source_id: "test".to_string(),
-            #[cfg(feature = "sqlx")]
-            created_at: None,
-            #[cfg(feature = "sqlx")]
-            updated_at: None,
         };
 
         assert!(manga.authors.is_empty());
@@ -276,8 +257,6 @@ mod unit_tests {
             pages: vec![],
             manga_id: "test".to_string(),
             source_id: "test".to_string(),
-            #[cfg(feature = "sqlx")]
-            created_at: None,
         };
 
         assert!(chapter.pages.is_empty());

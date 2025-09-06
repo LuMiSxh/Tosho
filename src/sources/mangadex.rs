@@ -337,8 +337,6 @@ impl MangaDexSource {
             pages: vec![], // Pages are fetched separately
             manga_id: manga_id.to_string(),
             source_id: self.id().to_string(),
-            #[cfg(feature = "sqlx")]
-            created_at: None,
         })
     }
 
@@ -394,6 +392,7 @@ impl MangaDexSource {
 
         Manga {
             id: data.id.clone(),
+            url: Some(format!("{}/title/{}", self.base_url(), data.id)),
             title,
             cover_url,
             authors,
@@ -404,10 +403,6 @@ impl MangaDexSource {
             },
             tags,
             source_id: self.id().to_string(),
-            #[cfg(feature = "sqlx")]
-            created_at: None,
-            #[cfg(feature = "sqlx")]
-            updated_at: None,
         }
     }
 }

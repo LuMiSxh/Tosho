@@ -14,24 +14,19 @@
 //!
 //! let manga = Manga {
 //!     id: "one-piece".to_string(),
+//!     url: None,
 //!     title: "One Piece".to_string(),
 //!     authors: vec!["Oda Eiichiro".to_string()],
 //!     source_id: "mangadex".to_string(),
 //!     cover_url: Some("https://example.com/cover.jpg".to_string()),
 //!     description: Some("Epic pirate adventure".to_string()),
 //!     tags: vec!["Action".to_string(), "Adventure".to_string()],
-//!     #[cfg(feature = "sqlx")]
-//!     created_at: None,
-//!     #[cfg(feature = "sqlx")]
-//!     updated_at: None,
 //! };
 //! ```
 
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "sqlx")]
-use chrono::NaiveDateTime;
 #[cfg(feature = "sqlx")]
 use sqlx::FromRow;
 
@@ -44,6 +39,7 @@ use sqlx::FromRow;
 /// # Fields
 ///
 /// * `id` - Unique identifier within the source (used for fetching chapters)
+/// * `url` - Optional URL to the manga's main page
 /// * `title` - The main title of the manga
 /// * `cover_url` - Optional URL to the cover image
 /// * `authors` - List of author names
@@ -58,16 +54,13 @@ use sqlx::FromRow;
 ///
 /// let manga = Manga {
 ///     id: "123".to_string(),
+///     url: None,
 ///     title: "One Piece".to_string(),
 ///     authors: vec!["Oda Eiichiro".to_string()],
 ///     source_id: "mangadex".to_string(),
 ///     cover_url: Some("https://example.com/cover.jpg".to_string()),
 ///     description: Some("A story about pirates".to_string()),
 ///     tags: vec!["Action".to_string(), "Adventure".to_string()],
-///     #[cfg(feature = "sqlx")]
-///     created_at: None,
-///     #[cfg(feature = "sqlx")]
-///     updated_at: None,
 /// };
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -84,6 +77,9 @@ pub struct Manga {
     /// Cover image URL
     pub cover_url: Option<String>,
 
+    /// URL to the manga's main page
+    pub url: Option<String>,
+
     /// List of authors
     #[cfg_attr(feature = "sqlx", sqlx(skip))]
     #[serde(default)]
@@ -99,16 +95,6 @@ pub struct Manga {
 
     /// Source identifier this manga came from
     pub source_id: String,
-
-    /// Creation timestamp (for database users)
-    #[cfg(feature = "sqlx")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<NaiveDateTime>,
-
-    /// Last update timestamp (for database users)
-    #[cfg(feature = "sqlx")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<NaiveDateTime>,
 }
 
 /// Represents a single chapter of a manga.
@@ -140,8 +126,6 @@ pub struct Manga {
 ///     ],
 ///     manga_id: "one-piece".to_string(),
 ///     source_id: "mangadex".to_string(),
-///     #[cfg(feature = "sqlx")]
-///     created_at: None,
 /// };
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -168,11 +152,6 @@ pub struct Chapter {
 
     /// Source identifier
     pub source_id: String,
-
-    /// Creation timestamp (for database users)
-    #[cfg(feature = "sqlx")]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<NaiveDateTime>,
 }
 
 /// Search parameters for querying manga across sources.

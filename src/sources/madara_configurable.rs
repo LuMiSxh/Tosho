@@ -97,20 +97,8 @@ impl Source for ConfigurableMadaraSource {
                 continue;
             }
 
-            // Extract manga ID from URL path
-            let id = if href.contains("/kissmanga/") {
-                if let Some(id_part) = href.split("/kissmanga/").nth(1) {
-                    id_part.trim_end_matches('/').to_string()
-                } else {
-                    continue;
-                }
-            } else {
-                if let Some(id_part) = href.split('/').filter(|s| !s.is_empty()).last() {
-                    id_part.to_string()
-                } else {
-                    continue;
-                }
-            };
+            // The unique ID is the relative path to the manga, without leading/trailing slashes.
+            let id = href.trim_matches('/').to_string();
 
             let cover_url = if !cover_img.trim().is_empty() {
                 if cover_img.starts_with("http") {
@@ -126,14 +114,11 @@ impl Source for ConfigurableMadaraSource {
                 id,
                 title: title.trim().to_string(),
                 cover_url,
+                url: Some(self.full_url(&href)),
                 authors: vec![],
                 description: None,
                 tags: vec![],
                 source_id: self.id().to_string(),
-                #[cfg(feature = "sqlx")]
-                created_at: None,
-                #[cfg(feature = "sqlx")]
-                updated_at: None,
             });
         }
 
@@ -171,17 +156,7 @@ impl Source for ConfigurableMadaraSource {
                 }
 
                 // Extract chapter ID from URL
-                let id = if href.contains("/kissmanga/") {
-                    href.split("/kissmanga/")
-                        .nth(1)?
-                        .trim_end_matches('/')
-                        .to_string()
-                } else {
-                    href.split('/')
-                        .filter(|s| !s.is_empty())
-                        .last()?
-                        .to_string()
-                };
+                let id = href.trim_matches('/').to_string();
 
                 Some(Chapter {
                     id,
@@ -190,8 +165,6 @@ impl Source for ConfigurableMadaraSource {
                     pages: vec![],
                     manga_id: manga_id.to_string(),
                     source_id: self.id().to_string(),
-                    #[cfg(feature = "sqlx")]
-                    created_at: None,
                 })
             })
             .collect();
@@ -200,11 +173,7 @@ impl Source for ConfigurableMadaraSource {
     }
 
     async fn get_pages(&self, chapter_id: &str) -> Result<Vec<String>> {
-        let url = if chapter_id.starts_with("http") {
-            chapter_id.to_string()
-        } else {
-            self.full_url(&format!("kissmanga/{}", chapter_id))
-        };
+        let url = self.full_url(chapter_id);
 
         let html_str = self.client.get_text(&url).await?;
         let html = net::html::parse(&html_str);
