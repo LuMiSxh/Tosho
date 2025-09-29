@@ -69,7 +69,7 @@
 //!
 //!     // Download chapter
 //!     let download_dir = PathBuf::from("./downloads");
-//!     let chapter_path = source.download_chapter(&chapter.id, &download_dir).await?;
+//!     let chapter_path = source.download_chapter(&manga, &chapter, &download_dir, None).await?;
 //!
 //!     println!("Downloaded to: {}", chapter_path.display());
 //!     Ok(())

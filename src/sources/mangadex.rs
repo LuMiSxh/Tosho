@@ -324,6 +324,13 @@ impl MangaDexSource {
             .and_then(|ch| ch.parse::<f64>().ok())
             .unwrap_or(0.0);
 
+        // Extract volume number
+        let volume_num = data
+            .attributes
+            .volume
+            .as_ref()
+            .and_then(|vol| vol.parse::<f64>().ok());
+
         let title = data
             .attributes
             .title
@@ -333,6 +340,7 @@ impl MangaDexSource {
         Some(Chapter {
             id: data.id.clone(),
             number: chapter_num,
+            volume: volume_num,
             title,
             pages: vec![], // Pages are fetched separately
             manga_id: manga_id.to_string(),

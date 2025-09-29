@@ -5,6 +5,7 @@
 use tokio::time::timeout;
 use tosho::prelude::*;
 use tosho::sources::{KissMangaSource, MangaDexSource};
+use tosho::types::ImageFormat;
 
 // Import test utilities
 mod common;
@@ -122,7 +123,12 @@ mod source_tests {
                         println!("Found test chapter: {}", chapter.title);
 
                         // Test the download
-                        let download_future = source.download_chapter(&chapter.id, &test_dir);
+                        let download_future = source.download_chapter(
+                            &manga,
+                            &chapter,
+                            &test_dir,
+                            Some(ImageFormat::Jpeg),
+                        );
                         match timeout(DOWNLOAD_TIMEOUT, download_future).await {
                             Ok(Ok(chapter_path)) => {
                                 println!(
@@ -191,7 +197,13 @@ mod source_tests {
                         println!("Found KissManga test chapter: {}", chapter.title);
 
                         // Test the download with KissManga's custom implementation
-                        let download_future = source.download_chapter(&chapter.id, &test_dir);
+                        let download_future = source.download_chapter(
+                            &manga,
+                            &chapter,
+                            &test_dir,
+                            Some(ImageFormat::Jpeg),
+                        );
+
                         match timeout(DOWNLOAD_TIMEOUT, download_future).await {
                             Ok(Ok(chapter_path)) => {
                                 println!(

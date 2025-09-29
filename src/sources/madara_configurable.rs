@@ -179,6 +179,7 @@ impl Source for ConfigurableMadaraSource {
                     id,
                     number: (i + 1) as f64,
                     title: title.trim().to_string(),
+                    volume: None,
                     pages: vec![],
                     manga_id: manga_id.to_string(),
                     source_id: self.id().to_string(),

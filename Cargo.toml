@@ -1,6 +1,6 @@
 [package]
 name = "tosho"
-version = "0.1.6"
+version = "0.2.0"
 authors = ["LuMiSxh"]
 edition = "2024"
 description = "A unified manga source library for Rust"
@@ -55,3 +55,4 @@ specta = { version = "=2.0.0-rc.22", default-features = true, features = [
     "serde_json",
     "derive",
 ], optional = true }
+image = { version = "0.25", features = ["jpeg", "png", "webp", "avif"] }

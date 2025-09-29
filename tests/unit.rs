@@ -55,6 +55,7 @@ mod unit_tests {
         let chapter = Chapter {
             id: "chapter-1".to_string(),
             title: "Chapter 1: The Beginning".to_string(),
+            volume: None,
             number: 1.0,
             pages: vec![
                 "https://example.com/page1.jpg".to_string(),
@@ -223,6 +224,7 @@ mod unit_tests {
         let chapter = Chapter {
             id: "special".to_string(),
             title: "Chapter 5.5: Special".to_string(),
+            volume: None,
             number: 5.5,
             pages: vec![],
             manga_id: "test".to_string(),
@@ -253,6 +255,7 @@ mod unit_tests {
         let chapter = Chapter {
             id: "test".to_string(),
             title: "Test".to_string(),
+            volume: None,
             number: 1.0,
             pages: vec![],
             manga_id: "test".to_string(),

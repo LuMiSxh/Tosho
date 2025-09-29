@@ -119,6 +119,7 @@ pub struct Manga {
 /// let chapter = Chapter {
 ///     id: "ch1".to_string(),
 ///     number: 1.0,
+///     volume: None,
 ///     title: "Romance Dawn".to_string(),
 ///     pages: vec![
 ///         "https://example.com/page1.jpg".to_string(),
@@ -138,6 +139,10 @@ pub struct Chapter {
 
     /// Chapter number (can be decimal for .5 chapters)
     pub number: f64,
+
+    /// Volume number, if available
+    #[serde(default)]
+    pub volume: Option<f64>,
 
     /// Chapter title
     pub title: String,
@@ -280,6 +285,27 @@ impl From<&str> for SearchParams {
         SearchParams {
             query: query.to_string(),
             ..Default::default()
+        }
+    }
+}
+
+/// Represents the target image format for conversion.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ImageFormat {
+    Jpeg,
+    Png,
+    WebP,
+    Avif,
+}
+
+impl ImageFormat {
+    /// Returns the appropriate file extension for the format.
+    pub fn extension(&self) -> &'static str {
+        match self {
+            ImageFormat::Jpeg => "jpg",
+            ImageFormat::Png => "png",
+            ImageFormat::WebP => "webp",
+            ImageFormat::Avif => "avif",
         }
     }
 }

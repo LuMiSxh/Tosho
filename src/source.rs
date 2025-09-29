@@ -28,12 +28,17 @@
 
 use async_trait::async_trait;
 use futures::future;
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
+use tokio::task::spawn_blocking;
 
 use crate::{
+    SearchParams,
     error::Result,
     search::SearchBuilder,
-    types::{Chapter, Manga, SearchParams},
+    types::{Chapter, ImageFormat, Manga},
 };
 
 /// Trait that all manga sources must implement.
@@ -249,51 +254,71 @@ pub trait Source: Send + Sync {
     /// - Consider implementing lazy loading for large chapters
     async fn get_pages(&self, chapter_id: &str) -> Result<Vec<String>>;
 
-    /// Downloads a chapter to the specified directory.
+    /// Downloads a chapter to the specified directory with a structured path.
     ///
-    /// This is a convenience method that combines getting pages and downloading them.
-    /// The chapter will be saved in a subdirectory named after the chapter.
+    /// The default implementation creates a directory structure of:
+    /// `output_dir/manga_title/xx-yyy/zzz.ext`
+    /// and can convert images to a specified format on the fly.
     ///
     /// # Parameters
     ///
-    /// * `chapter_id` - The unique identifier of the chapter
-    /// * `output_dir` - Base directory where the chapter should be saved
+    /// * `manga` - The manga object, used for the top-level directory name.
+    /// * `chapter` - The chapter object, used for volume/chapter numbers.
+    /// * `output_dir` - Base directory where the manga folder will be created.
+    /// * `image_format` - If Some, converts all downloaded images to this format. If None, saves in original format.
     ///
     /// # Returns
     ///
     /// The path to the downloaded chapter directory.
-    ///
-    /// # Default Implementation
-    ///
-    /// The default implementation:
-    /// 1. Gets the chapter pages using `get_pages`
-    /// 2. Downloads each page to `output_dir/chapter_id/`
-    /// 3. Names files as `page_001.jpg`, `page_002.jpg`, etc.
-    ///
-    /// Sources can override this for custom download behavior.
     async fn download_chapter(
         &self,
-        chapter_id: &str,
-        output_dir: &std::path::Path,
-    ) -> Result<std::path::PathBuf> {
+        manga: &Manga,
+        chapter: &Chapter,
+        output_dir: &Path,
+        image_format: Option<ImageFormat>,
+    ) -> Result<PathBuf> {
+        use crate::download::sanitize_filename;
         use tokio::fs;
-        use tokio::io::AsyncWriteExt;
 
-        let pages = self.get_pages(chapter_id).await?;
+        let pages = self.get_pages(&chapter.id).await?;
         if pages.is_empty() {
             return Err(crate::Error::source(
                 self.id(),
-                "No pages found for chapter",
+                format!("No pages found for chapter {}", chapter.id),
             ));
         }
 
-        // Create chapter directory
-        let chapter_dir = output_dir.join(format!("chapter_{}", chapter_id));
+        // 1. Create the manga directory: /%MANGA_NAME%/
+        let manga_dir = output_dir.join(sanitize_filename(&manga.title));
+
+        // 2. Create the chapter directory: /%VOL%-%CH%/
+        let chapter_name = {
+            // Default to volume 0 if not present, and cast to u32 for padding.
+            let vol_num = chapter.volume.unwrap_or(0.0) as u32;
+
+            // Handle chapter numbers with decimals (e.g., 99.5) separately from integers.
+            let chapter_number_str = {
+                let fract = chapter.number.fract();
+                // Use a small tolerance for floating point comparison
+                if fract.abs() > 0.001 {
+                    // It has a decimal part, e.g., 99.5 -> "99.5"
+                    format!("{:.1}", chapter.number)
+                } else {
+                    // It's a whole number, e.g., 100.0 -> "100". Pad it.
+                    format!("{:03}", chapter.number as u32)
+                }
+            };
+
+            format!("{:03}-{}", vol_num, chapter_number_str)
+        };
+
+        let chapter_dir = manga_dir.join(sanitize_filename(&chapter_name));
+
         fs::create_dir_all(&chapter_dir).await.map_err(|e| {
             crate::Error::source(self.id(), format!("Failed to create directory: {}", e))
         })?;
 
-        // Download each page
+        // 3. Download, convert, and save pages
         let client = reqwest::Client::new();
         for (i, page_url) in pages.iter().enumerate() {
             let response = client.get(page_url).send().await.map_err(|e| {
@@ -308,35 +333,49 @@ pub trait Source: Send + Sync {
                 )));
             }
 
-            let bytes = response.bytes().await.map_err(|e| {
+            let image_bytes = response.bytes().await.map_err(|e| {
                 crate::Error::parse(format!("Failed to read page {} data: {}", i + 1, e))
             })?;
 
-            // Determine file extension from URL or default to jpg
-            let extension = page_url
-                .split('?')
-                .next()
-                .and_then(|url| url.split('.').last())
-                .filter(|ext| ext.len() <= 4)
-                .unwrap_or("jpg");
+            let page_num = i + 1;
+            let final_image_data;
+            let final_extension: String;
 
-            let filename = format!("page_{:03}.{}", i + 1, extension);
+            if let Some(format) = image_format {
+                // Convert the image
+                final_image_data = spawn_blocking(move || -> Result<Vec<u8>> {
+                    let img = image::load_from_memory(&image_bytes).map_err(|e| {
+                        crate::Error::parse(format!("Failed to decode image: {}", e))
+                    })?;
+
+                    let mut buffer = std::io::Cursor::new(Vec::new());
+
+                    match format {
+                        ImageFormat::Jpeg => img.write_to(&mut buffer, image::ImageFormat::Jpeg)?,
+                        ImageFormat::Png => img.write_to(&mut buffer, image::ImageFormat::Png)?,
+                        ImageFormat::WebP => img.write_to(&mut buffer, image::ImageFormat::WebP)?,
+                        ImageFormat::Avif => img.write_to(&mut buffer, image::ImageFormat::Avif)?,
+                    }
+                    Ok(buffer.into_inner())
+                })
+                .await??;
+                final_extension = format.extension().to_string();
+            } else {
+                // Save in original format
+                final_image_data = image_bytes.to_vec();
+                let page_url_clone = page_url.clone();
+                final_extension = crate::download::extract_extension(&page_url_clone)
+                    .unwrap_or_else(|| "jpg".to_string());
+            }
+
+            // 4. Construct filename: /%PAGE_NUM%.ext
+            let filename = format!("{:03}.{}", page_num, final_extension.clone());
             let filepath = chapter_dir.join(filename);
 
-            let mut file = fs::File::create(&filepath).await.map_err(|e| {
-                crate::Error::source(self.id(), format!("Failed to create file: {}", e))
-            })?;
-
-            file.write_all(&bytes).await.map_err(|e| {
+            fs::write(&filepath, &final_image_data).await.map_err(|e| {
                 crate::Error::source(self.id(), format!("Failed to write file: {}", e))
             })?;
         }
-
-        println!(
-            "Downloaded {} pages to {}",
-            pages.len(),
-            chapter_dir.display()
-        );
         Ok(chapter_dir)
     }
 }

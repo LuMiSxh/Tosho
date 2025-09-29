@@ -184,6 +184,19 @@ pub enum Error {
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
 
+    /// Image processing errors.
+    ///
+    /// This variant wraps errors from image processing operations, such as
+    /// converting images.
+    #[error("Image error: {0}")]
+    Image(#[from] image::ImageError),
+
+    /// Join errors.
+    ///
+    /// This variant wraps errors from tokio tasks.
+    #[error("Join error: {0}")]
+    Join(#[from] tokio::task::JoinError),
+
     /// Generic error messages.
     ///
     /// This variant is used for errors that don't fit into other specific

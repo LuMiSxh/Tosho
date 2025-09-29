@@ -13,6 +13,8 @@ use common::{TEST_MANGA_TITLE, TEST_TIMEOUT, setup_test_dir};
 
 #[cfg(test)]
 mod integration_tests {
+    use tosho::types::ImageFormat;
+
     use super::*;
 
     #[tokio::test]
@@ -101,7 +103,12 @@ mod integration_tests {
                         // Step 3: Download chapter
                         let download_result = timeout(
                             Duration::from_secs(60),
-                            source.download_chapter(&chapter.id, &test_dir),
+                            source.download_chapter(
+                                &manga,
+                                &chapter,
+                                &test_dir,
+                                Some(ImageFormat::Jpeg),
+                            ),
                         )
                         .await;
 
